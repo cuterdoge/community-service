@@ -3,6 +3,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const config = require('./config');
 
 const app = express();
 app.use(cors());
@@ -17,21 +19,7 @@ app.get('/', (req, res) => {
 });
 
 // --- Cloud MySQL config ---
-const dbConfig = {
-    host: process.env.DB_HOST,      // from cloud database
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 3306,
-    ssl: {
-        rejectUnauthorized: false   // Required for Railway MySQL
-    },
-    connectTimeout: 30000,          // 30 seconds
-    acquireTimeout: 30000,          // 30 seconds
-    timeout: 30000,                 // 30 seconds
-    reconnect: true,
-    maxReconnects: 3
-};
+const dbConfig = config.database;
 
 let db;
 
@@ -53,8 +41,10 @@ async function connectDB() {
         CREATE TABLE IF NOT EXISTS volunteers (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100),
-            email VARCHAR(100),
-            phone VARCHAR(20)
+            email VARCHAR(100) UNIQUE,
+            phone VARCHAR(20),
+            password_hash VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `);
 
@@ -87,8 +77,13 @@ async function connectDB() {
 // --- Volunteer registration ---
 app.post('/registerVolunteer', async (req,res)=>{
     try {
-        const {name,email,phone} = req.body;
-        if(!name || !email || !phone) return res.json({success:false,message:'Missing fields'});
+        const {name,email,phone,password} = req.body;
+        if(!name || !email || !phone || !password) return res.json({success:false,message:'Missing fields'});
+        
+        // Password validation
+        if(password.length < 6) {
+            return res.json({success:false,message:'Password must be at least 6 characters long'});
+        }
         
         // Check if database is connected
         if (!db) {
@@ -96,10 +91,84 @@ app.post('/registerVolunteer', async (req,res)=>{
             return res.status(503).json({success:false,message:'Database connection unavailable'});
         }
         
-        await db.query('INSERT INTO volunteers (name,email,phone) VALUES (?,?,?)',[name,email,phone]);
-        res.json({success:true,name});
+        // Check if email already exists
+        const [existing] = await db.query('SELECT * FROM volunteers WHERE email=?',[email]);
+        if(existing.length > 0) {
+            return res.json({success:false,message:'Email already registered'});
+        }
+        
+        // Hash password
+        const saltRounds = 10;
+        const password_hash = await bcrypt.hash(password, saltRounds);
+        
+        await db.query('INSERT INTO volunteers (name,email,phone,password_hash) VALUES (?,?,?,?)',[name,email,phone,password_hash]);
+        res.json({success:true,message:'Registration successful'});
     } catch(err){
         console.error('Volunteer registration error:', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ENOTFOUND') {
+            res.status(503).json({success:false,message:'Database connection lost'});
+        } else {
+            res.status(500).json({success:false,message:'Database error'});
+        }
+    }
+});
+
+// --- Volunteer login ---
+app.post('/login', async (req,res)=>{
+    try {
+        const {email,password} = req.body;
+        if(!email || !password) return res.json({success:false,message:'Email and password are required'});
+        
+        // Check if database is connected
+        if (!db) {
+            console.error('Database not connected');
+            return res.status(503).json({success:false,message:'Database connection unavailable'});
+        }
+        
+        // Check if this is admin login
+        if (email === config.app.admin.email) {
+            console.log('email', email)
+            console.log('adminemail', config.app.admin.email)
+            if (password === config.app.admin.password) {
+                return res.json({
+                    success: true,
+                    user: {
+                        id: 'admin',
+                        name: 'Administrator',
+                        email: config.app.admin.email,
+                        isAdmin: true
+                    }
+                });
+            } else {
+                return res.json({success:false,message:'Invalid email or password'});
+            }
+        }
+        
+        // Find regular user by email
+        const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?',[email]);
+        if(rows.length === 0) {
+            return res.json({success:false,message:'Invalid email or password'});
+        }
+        
+        const user = rows[0];
+        
+        // Verify password
+        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        if(!passwordMatch) {
+            return res.json({success:false,message:'Invalid email or password'});
+        }
+        
+        res.json({
+            success:true,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone
+            }
+        });
+    } catch(err){
+        console.error('Login error:', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ENOTFOUND') {
             res.status(503).json({success:false,message:'Database connection lost'});
         } else {
@@ -122,16 +191,16 @@ app.get('/timetable', async (req,res)=>{
 // --- Book/release slot ---
 app.post('/book', async (req,res)=>{
     try{
-        const {name, slot} = req.body;
-        if(!name || !slot) return res.json({success:false,message:'Missing fields'});
+        const {email, name, slot} = req.body;
+        if(!email || !slot) return res.json({success:false,message:'Missing fields'});
 
         const [rows] = await db.query('SELECT booked_by FROM slots WHERE slot=?',[slot]);
         if(rows.length===0) return res.json({success:false,message:'Slot not found'});
 
         const bookedBy = rows[0].booked_by;
-        if(bookedBy && bookedBy!==name) return res.json({success:false,message:`Slot already booked by ${bookedBy}`});
+        if(bookedBy && bookedBy!==email) return res.json({success:false,message:'Slot already booked by another user'});
 
-        const newValue = bookedBy===name ? null : name;
+        const newValue = bookedBy===email ? null : email;
         await db.query('UPDATE slots SET booked_by=? WHERE slot=?',[newValue,slot]);
         res.json({success:true});
     }catch(err){
@@ -140,11 +209,51 @@ app.post('/book', async (req,res)=>{
     }
 });
 
-// --- Admin login ---
-app.post('/adminLogin', async (req,res)=>{
-    const {username,password} = req.body;
-    if(username==='admin' && password==='admin123') res.json({success:true});
-    else res.json({success:false,message:'Invalid credentials'});
+
+// --- Update user profile ---
+app.post('/updateProfile', async (req,res)=>{
+    try {
+        const {email, name, phone, currentPassword, newPassword} = req.body;
+        if(!email || !name || !phone || !currentPassword) {
+            return res.json({success:false,message:'Missing required fields'});
+        }
+        
+        // Get user from database
+        const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?',[email]);
+        if(rows.length === 0) {
+            return res.json({success:false,message:'User not found'});
+        }
+        
+        const user = rows[0];
+        
+        // Verify current password
+        const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
+        if(!passwordMatch) {
+            return res.json({success:false,message:'Current password is incorrect'});
+        }
+        
+        // Update user data
+        let updateQuery = 'UPDATE volunteers SET name=?, phone=?';
+        let updateParams = [name, phone];
+        
+        // If new password provided, hash it and include in update
+        if(newPassword) {
+            const saltRounds = 10;
+            const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+            updateQuery += ', password_hash=?';
+            updateParams.push(newPasswordHash);
+        }
+        
+        updateQuery += ' WHERE email=?';
+        updateParams.push(email);
+        
+        await db.query(updateQuery, updateParams);
+        
+        res.json({success:true,message:'Profile updated successfully'});
+    } catch(err){
+        console.error('Profile update error:', err);
+        res.status(500).json({success:false,message:'Database error'});
+    }
 });
 
 // --- Admin reset timetable ---

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Community Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="header.css">
+</head>
+<body>
+    <h1>Volunteer Login</h1>
+
+    <div class="form-container">
+        <form id="login-form">
+            <div class="form-group">
+                <label for="login-email">Email:</label>
+                <input id="login-email" type="email" placeholder="Enter your email" required>
+                <span class="error-message" id="email-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="login-password">Password:</label>
+                <input id="login-password" type="password" placeholder="Enter your password" required>
+                <span class="error-message" id="password-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="remember-me">
+                    <span class="checkmark"></span>
+                    Remember me (keep me logged in)
+                </label>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <div class="form-footer">
+            <p>Don't have an account? <a href="register.html">Register here</a></p>
+            <p><a href="index.html">← Back to Home</a></p>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="header.js"></script>
+    <script src="login.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            headerManager = new HeaderManager();
+            
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                // User already logged in, redirect to volunteer page
+                window.location.href = 'volunteer.html';
+            }
+        });
+    </script>
+</body>
+</html>

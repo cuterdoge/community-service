@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile - Community Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="header.css">
+</head>
+<body>
+    <div id="login-required" class="form-container">
+        <h1>Please Login</h1>
+        <p>You must be logged in to view your profile.</p>
+        <div class="auth-buttons">
+            <a href="login.html" class="login-btn">Login</a>
+            <a href="register.html" class="register-btn">Register</a>
+        </div>
+    </div>
+
+    <div id="profile-page" style="display:none;">
+        <div class="form-container">
+            <h1>My Profile</h1>
+            
+            <!-- Profile Picture Section -->
+            <div class="profile-pic-section">
+                <div class="current-pic-container">
+                    <img id="current-profile-pic" src="" alt="Current Profile Picture" class="large-profile-pic">
+                </div>
+                <button onclick="changeProfilePicture()" class="change-pic-btn">Change Profile Picture</button>
+            </div>
+
+            <!-- Profile Form -->
+            <form id="profile-form">
+                <div class="form-group">
+                    <label for="profile-name">Full Name:</label>
+                    <input id="profile-name" type="text" required>
+                    <span class="error-message" id="name-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="profile-email">Email:</label>
+                    <input id="profile-email" type="email" disabled>
+                    <small class="field-note">Email cannot be changed</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="profile-phone">Phone Number:</label>
+                    <input id="profile-phone" type="tel" required>
+                    <span class="error-message" id="phone-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="current-password">Current Password:</label>
+                    <input id="current-password" type="password" placeholder="Enter current password to save changes">
+                    <span class="error-message" id="current-password-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="new-password">New Password (Optional):</label>
+                    <input id="new-password" type="password" placeholder="Leave empty to keep current password">
+                    <span class="error-message" id="new-password-error"></span>
+                </div>
+
+                <button type="submit" class="update-btn">Update Profile</button>
+                <button type="button" onclick="window.history.back()" class="cancel-btn">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="header.js"></script>
+    <script src="profile.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            headerManager = new HeaderManager();
+        });
+    </script>
+</body>
+</html>

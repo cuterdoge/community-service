@@ -3,10 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Community Hub - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="header.css">
 </head>
 <body>
-    <h1>Welcome to the Community Hub</h1>
-    <p>This is the home page. Click below to go to the volunteer page.</p>
-    <a href="volunteer.html">Go to Volunteer Page</a>
+    <div class="form-container">
+        <h1>Welcome to the Community Hub</h1>
+        <p>Volunteer time slot management system</p>
+        
+        <div class="auth-buttons">
+            <button onclick="location.href='login.html'" class="login-btn">Login</button>
+            <button onclick="location.href='register.html'" class="register-btn">Register</button>
+            <button onclick="location.href='volunteer.html'" class="admin-btn">Go to Volunteer Hub</button>
+        </div>
+        
+        <div class="form-footer">
+            <p>Admin Login: Use email <code>admin@communityhub.com</code></p>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="header.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            headerManager = new HeaderManager();
+        });
+    </script>
 </body>
 </html>

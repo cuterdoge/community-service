@@ -2,34 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Volunteer Page</title>
+    <title>Volunteer Schedule</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="header.css">
 </head>
 <body>
-    <h1>Volunteer Registration & Schedule</h1>
-
-    <!-- Volunteer registration form -->
-    <div id="registration-form-section">
-        <h2>Register as Volunteer</h2>
-        <form id="registration-form">
-            <input id="vol-name" placeholder="Full Name" required>
-            <input id="vol-email" placeholder="Email" required>
-            <input id="vol-phone" placeholder="Phone Number" required>
-            <button type="submit">Register</button>
-        </form>
+    <div id="login-prompt" class="login-prompt">
+        <h1>Welcome to Volunteer Hub</h1>
+        <p>Please log in to view and book time slots</p>
+        <div class="auth-buttons">
+            <button onclick="location.href='login.html'" class="login-btn">Login</button>
+            <button onclick="location.href='register.html'" class="register-btn">Register</button>
+        </div>
     </div>
 
-    <!-- Timetable section (hidden initially) -->
-    <div id="timetable-section" style="display:none;">
-        <h2>Available Time Slots</h2>
-        <div id="schedule-grid"></div>
+    <!-- Main volunteer dashboard (hidden initially) -->
+    <div id="volunteer-dashboard" style="display:none;">
+        <div class="header">
+            <h1>Volunteer Schedule</h1>
+            <div class="user-info">
+                <span id="welcome-message">Welcome, </span>
+                <button onclick="logout()" class="logout-btn">Logout</button>
+            </div>
+        </div>
+
+        <!-- Timetable section -->
+        <div id="timetable-section">
+            <h2>Available Time Slots</h2>
+            <div id="schedule-grid"></div>
+        </div>
+
+        <!-- Admin section (only shown for admins) -->
+        <div id="admin-section" style="display:none;" class="admin-section">
+            <h3>Admin Controls</h3>
+            <button onclick="resetAllSlots()" class="admin-btn">Reset All Bookings</button>
+            <button onclick="viewAllBookings()" class="admin-btn">View All Bookings</button>
+            <div id="admin-bookings" style="margin-top: 20px;"></div>
+        </div>
     </div>
 
-    <!-- Admin button -->
-    <div>
-        <button onclick="location.href='admin.html'">Admin Login</button>
-    </div>
-
+    <script src="auth.js"></script>
+    <script src="header.js"></script>
     <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            headerManager = new HeaderManager();
+        });
+    </script>
 </body>
 </html>
