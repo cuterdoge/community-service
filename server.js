@@ -9,11 +9,11 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files
-app.use(express.static('public'));
+app.use(express.static('docs'));
 
 // Default route
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'volunteer.html'));
+    res.sendFile(path.join(__dirname, 'docs', 'volunteer.html'));
 });
 
 // --- Cloud MySQL config ---
