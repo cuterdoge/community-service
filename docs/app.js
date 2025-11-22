@@ -48,7 +48,7 @@ async function loadTimetable(){
             div.dataset.slot=`${day}-${time}`;
 
             if(!slotObj) div.textContent='N/A';
-            else if(slotObj.status==='booked'){
+            else if(slotObj.booked_by != null){
                 if(slotObj.booked_by===currentUser){
                     div.classList.add('mine');
                     div.textContent='Mine (click to release)';
