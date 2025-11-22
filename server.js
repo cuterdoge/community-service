@@ -56,16 +56,33 @@ async function connectDB() {
         )
     `);
 
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS schedule_dates (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            week_start_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     // Initialize slots if empty
     const [rows] = await db.query('SELECT COUNT(*) AS count FROM slots');
     if (rows[0].count === 0) {
-        const days = ['Mon','Tue','Wed'];
+        const days = ['Mon','Tue','Wed','Thurs','Fri','Sat','Sun'];
         const times = ['9am-12pm','1pm-3pm','4pm-6pm'];
         for (const day of days) {
             for (const time of times) {
                 await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,NULL)', [`${day}-${time}`]);
             }
         }
+    }
+
+    // Initialize schedule dates if empty (set current week)
+    const [dateRows] = await db.query('SELECT COUNT(*) AS count FROM schedule_dates');
+    if (dateRows[0].count === 0) {
+        const today = new Date();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - today.getDay() + 1); // Get Monday of current week
+        await db.query('INSERT INTO schedule_dates (week_start_date) VALUES (?)', [monday.toISOString().split('T')[0]]);
     }
 }
  connectDB().catch(err => {                                                                                          
@@ -180,11 +197,16 @@ app.post('/login', async (req,res)=>{
 // --- Get timetable ---
 app.get('/timetable', async (req,res)=>{
     try{
-        const [rows] = await db.query('SELECT slot, booked_by FROM slots');
-        res.json(rows);
+        const [slots] = await db.query('SELECT slot, booked_by FROM slots');
+        const [dates] = await db.query('SELECT week_start_date FROM schedule_dates ORDER BY created_at DESC LIMIT 1');
+        
+        res.json({
+            slots: slots,
+            weekStartDate: dates.length > 0 ? dates[0].week_start_date : null
+        });
     }catch(err){
         console.error(err);
-        res.json([]);
+        res.json({slots: [], weekStartDate: null});
     }
 });
 
@@ -264,6 +286,44 @@ app.post('/reset', async (req,res)=>{
     }catch(err){
         console.error(err);
         res.json({success:false});
+    }
+});
+
+// --- Admin set schedule dates and days ---
+app.post('/setScheduleDates', async (req,res)=>{
+    try{
+        const { weekStartDate, activeDays, adminEmail } = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success:false,message:'Admin access required'});
+        }
+        
+        if (!weekStartDate) {
+            return res.json({success:false,message:'Week start date is required'});
+        }
+        
+        if (!activeDays || !Array.isArray(activeDays) || activeDays.length === 0) {
+            return res.json({success:false,message:'At least one active day is required'});
+        }
+        
+        // Clear all existing slots
+        await db.query('DELETE FROM slots');
+        
+        // Insert new slots only for selected days
+        const times = ['9am-12pm','1pm-3pm','4pm-6pm'];
+        for (const day of activeDays) {
+            for (const time of times) {
+                await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,NULL)', [`${day}-${time}`]);
+            }
+        }
+        
+        // Insert new week start date
+        await db.query('INSERT INTO schedule_dates (week_start_date) VALUES (?)', [weekStartDate]);
+        res.json({success:true});
+    }catch(err){
+        console.error(err);
+        res.json({success:false,message:'Database error'});
     }
 });
 

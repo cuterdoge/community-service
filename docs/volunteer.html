@@ -72,89 +72,66 @@
         }
 
         /* Schedule Grid Styles */
+        #schedule-grid {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
         .schedule-header {
             text-align: center;
-            margin-bottom: 20px;
-            padding: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
             background-color: #e9ecef;
             border-radius: 8px;
         }
 
-        .day-headers {
-            display: grid;
-            grid-template-columns: 100px repeat(7, 1fr);
-            gap: 5px;
-            margin-bottom: 10px;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .day-header {
-            text-align: center;
-            padding: 10px 5px;
-            font-weight: bold;
-            border-radius: 5px;
-            background-color: #dee2e6;
-        }
-
-        .day-header .date {
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
             font-size: 0.9em;
-            color: #6c757d;
-            font-weight: normal;
         }
 
-        .time-row {
-            display: grid;
-            grid-template-columns: 100px repeat(7, 1fr);
-            gap: 5px;
-            margin-bottom: 5px;
-        }
-
-        .time-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .schedule-table th {
             background-color: #6c757d;
             color: white;
-            padding: 15px 5px;
-            border-radius: 5px;
-            font-weight: bold;
+            padding: 12px 8px;
             text-align: center;
-            font-size: 0.9em;
+            border: 1px solid #dee2e6;
         }
 
-        .slot {
-            padding: 15px 10px;
-            border: 2px solid #dee2e6;
-            border-radius: 5px;
+        .schedule-table td {
+            padding: 12px 8px;
+            border: 1px solid #dee2e6;
             text-align: center;
             cursor: pointer;
             background-color: #f8f9fa;
-            transition: all 0.3s ease;
-            font-size: 0.9em;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: background-color 0.3s ease;
         }
 
-        .slot:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .schedule-table td.slot {
+            min-height: 50px;
         }
 
-        .slot.mine {
+        .schedule-table td.slot:hover {
+            background-color: #e9ecef;
+        }
+
+        .schedule-table td.slot.mine {
             background-color: #d1ecf1;
-            border-color: #bee5eb;
             color: #0c5460;
         }
 
-        .slot.booked {
+        .schedule-table td.slot.booked {
             background-color: #f8d7da;
-            border-color: #f1aeb5;
             color: #721c24;
             cursor: not-allowed;
+        }
+
+        .date-small {
+            font-size: 0.8em;
+            color: #6c757d;
+            display: block;
         }
 
         .booking-item {

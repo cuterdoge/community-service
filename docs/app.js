@@ -46,45 +46,103 @@ async function loadTimetable(){
     try {
         const res = await fetch('/timetable');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const slots = await res.json();
-        console.log('Loaded slots:', slots);
+        const data = await res.json();
+        console.log('Loaded data:', data);
+        
+        // Handle both old format (array) and new format (object)
+        const slots = Array.isArray(data) ? data : data.slots;
+        const weekStartDate = Array.isArray(data) ? null : data.weekStartDate;
         
         const grid = document.getElementById('schedule-grid');
         grid.innerHTML='';
 
-        const days = ['Mon','Tue','Wed'];
+        // Get available days from slots (only days that exist in database)
+        const availableDays = [...new Set(slots.map(slot => slot.slot.split('-')[0]))];
+        const dayNames = {
+            'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 
+            'Thu': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'
+        };
         const times = ['9am-12pm','1pm-3pm','4pm-6pm'];
 
-        times.forEach(time=>{
-            days.forEach(day=>{
-                const slotObj = slots.find(s=>s.slot===`${day}-${time}`);
-                const div = document.createElement('div');
-                div.className='slot';
-                div.dataset.slot=`${day}-${time}`;
-
-                if(!slotObj) div.textContent='N/A';
-                else if(slotObj.booked_by != null){
-                    if(slotObj.booked_by===currentUser.email){
-                        div.classList.add('mine');
-                        div.textContent='Mine (click to release)';
-                        div.addEventListener('click', ()=>toggleSlot(slotObj.slot));
-                    }else{
-                        div.classList.add('booked');
-                        div.textContent='Booked';
-                    }
-                } else {
-                    div.textContent='Available';
-                    div.addEventListener('click', ()=>toggleSlot(slotObj.slot));
-                }
-                grid.appendChild(div);
+        // Calculate dates for available days
+        let weekDates = [];
+        if (weekStartDate && availableDays.length > 0) {
+            const startDate = new Date(weekStartDate);
+            const dayIndices = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6};
+            availableDays.forEach(dayAbb => {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + dayIndices[dayAbb]);
+                weekDates.push(currentDate);
             });
-            grid.appendChild(document.createElement('br'));
+        }
+
+        // Create header with dates
+        if (weekStartDate && weekDates.length > 0) {
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'schedule-header';
+            headerDiv.innerHTML = `<h4>Schedule for Week: ${formatWeekRange(weekDates[0], weekDates[weekDates.length-1])}</h4>`;
+            grid.appendChild(headerDiv);
+        }
+
+        // Create table
+        const table = document.createElement('table');
+        table.className = 'schedule-table table-responsive';
+
+        // Create header row
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = '<th>Time</th>';
+        availableDays.forEach((dayAbb, index) => {
+            const dateStr = weekDates.length > index ? formatDate(weekDates[index]) : '';
+            headerRow.innerHTML += `<th>${dayNames[dayAbb]}<br><span class="date-small">${dateStr}</span></th>`;
         });
+        table.appendChild(headerRow);
+
+        // Create time slot rows
+        times.forEach(time => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td><strong>${time}</strong></td>`;
+            
+            availableDays.forEach(dayAbb => {
+                const slotObj = slots.find(s=>s.slot===`${dayAbb}-${time}`);
+                const cell = document.createElement('td');
+                cell.className='slot';
+                cell.dataset.slot=`${dayAbb}-${time}`;
+
+                if(slotObj && slotObj.booked_by != null){
+                    if(slotObj.booked_by===currentUser.email){
+                        cell.classList.add('mine');
+                        cell.textContent='Mine (click to release)';
+                        cell.addEventListener('click', ()=>toggleSlot(slotObj.slot));
+                    }else{
+                        cell.classList.add('booked');
+                        cell.textContent='Booked';
+                    }
+                } else if(slotObj) {
+                    cell.textContent='Available';
+                    cell.addEventListener('click', ()=>toggleSlot(slotObj.slot));
+                }
+                row.appendChild(cell);
+            });
+            table.appendChild(row);
+        });
+
+        grid.appendChild(table);
     } catch (err) {
         console.error('Failed to load timetable:', err);
         const grid = document.getElementById('schedule-grid');
         grid.innerHTML = '<p style="color: red; text-align: center; margin: 20px;">❌ Server not available. Please start the Express server locally.</p>';
     }
+}
+
+// Helper functions for date formatting
+function formatDate(date) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function formatWeekRange(startDate, endDate) {
+    const startStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${startStr} - ${endStr}`;
 }
 
 // Book/release slot
@@ -141,7 +199,11 @@ async function viewAllBookings() {
     
     try {
         const res = await fetch('/timetable');
-        const slots = await res.json();
+        const data = await res.json();
+        
+        // Handle both old format (array) and new format (object)
+        const slots = Array.isArray(data) ? data : data.slots;
+        const weekStartDate = Array.isArray(data) ? null : data.weekStartDate;
         
         const bookedSlots = slots.filter(slot => slot.booked_by);
         const adminBookingsDiv = document.getElementById('admin-bookings');
@@ -164,4 +226,118 @@ async function viewAllBookings() {
         console.error('Failed to load bookings:', err);
         document.getElementById('admin-bookings').innerHTML = '<p style="color: red;">Failed to load bookings</p>';
     }
+}
+
+// Admin function to change schedule dates and days
+async function changeScheduleDates() {
+    if (!currentUser.isAdmin) return;
+    
+    // Create a modal-like interface for better UX
+    const modalHtml = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; justify-content: center; align-items: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+                <h4>Configure Schedule</h4>
+                
+                <div style="margin: 20px 0;">
+                    <label><strong>Week Start Date (Monday):</strong></label><br>
+                    <input type="date" id="weekStartInput" value="${getNextMonday().toISOString().split('T')[0]}" style="width: 100%; padding: 8px; margin: 5px 0;">
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <label><strong>Active Days:</strong></label><br>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;">
+                        <label><input type="checkbox" id="mon" value="Mon" checked> Monday</label>
+                        <label><input type="checkbox" id="tue" value="Tue" checked> Tuesday</label>
+                        <label><input type="checkbox" id="wed" value="Wed" checked> Wednesday</label>
+                        <label><input type="checkbox" id="thu" value="Thu"> Thursday</label>
+                        <label><input type="checkbox" id="fri" value="Fri"> Friday</label>
+                        <label><input type="checkbox" id="sat" value="Sat"> Saturday</label>
+                        <label><input type="checkbox" id="sun" value="Sun"> Sunday</label>
+                    </div>
+                    <small style="color: #666;">Select which days will have volunteer slots available</small>
+                </div>
+                
+                <div style="margin: 20px 0; text-align: center;">
+                    <button onclick="applyScheduleConfig()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px;">Apply Changes</button>
+                    <button onclick="closeScheduleModal()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    const modalDiv = document.createElement('div');
+    modalDiv.id = 'scheduleModal';
+    modalDiv.innerHTML = modalHtml;
+    document.body.appendChild(modalDiv);
+}
+
+async function applyScheduleConfig() {
+    const weekStartInput = document.getElementById('weekStartInput');
+    const newStartDate = weekStartInput.value;
+    
+    // Get selected days
+    const dayCheckboxes = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const activeDays = dayCheckboxes
+        .map(id => document.getElementById(id))
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+    
+    if (!newStartDate) {
+        alert('Please select a start date');
+        return;
+    }
+    
+    if (activeDays.length === 0) {
+        alert('Please select at least one day');
+        return;
+    }
+    
+    // Validate it's a Monday
+    const testDate = new Date(newStartDate);
+    if (testDate.getDay() !== 1) {
+        alert('Please select a Monday date');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/setScheduleDates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                weekStartDate: newStartDate,
+                activeDays: activeDays,
+                adminEmail: currentUser.email
+            })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            alert(`Schedule updated successfully!\nActive days: ${activeDays.join(', ')}`);
+            closeScheduleModal();
+            loadTimetable(); // Refresh the schedule
+        } else {
+            alert(`Failed to update schedule: ${data.message || 'Unknown error'}`);
+        }
+    } catch (err) {
+        console.error('Failed to update schedule:', err);
+        alert('Server error while updating schedule');
+    }
+}
+
+function closeScheduleModal() {
+    const modal = document.getElementById('scheduleModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Helper function to get next Monday
+function getNextMonday() {
+    const today = new Date();
+    const daysUntilMonday = (8 - today.getDay()) % 7;
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + (daysUntilMonday === 0 ? 7 : daysUntilMonday));
+    return nextMonday;
 }
