@@ -28,10 +28,12 @@ class HeaderManager {
             <div class="header-content">
                 <div class="header-left">
                     <a href="index.html" class="logo">
-                        <h2>Community Hub</h2>
+                        <h2>Joy Home Connect</h2>
                     </a>
                     <nav class="main-nav">
-                        <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer Hub'}</a>
+                        <a href="about.html"> 'About '</a>
+                        <a href="gallery.html">'Gallery '}</a>
+                        <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer '}</a>
                         ${this.currentUser && !this.currentUser.isAdmin ? '<a href="profile.html">My Profile</a>' : ''}
                     </nav>
                 </div>
