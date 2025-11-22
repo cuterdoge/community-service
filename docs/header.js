@@ -76,9 +76,10 @@ class HeaderManager {
     }
 
     updateHeaderDisplay() {
-        const authSection = document.getElementById('header-auth');
-        if (authSection) {
-            authSection.innerHTML = this.renderAuthSection();
+        const header = document.querySelector('.app-header');
+        if (header) {
+            //  header.innerHTML =
+            this.renderHeader();
             this.attachEventListeners();
         }
     }
@@ -93,14 +94,19 @@ class HeaderManager {
         const actions = [
             'Change Profile Picture',
             'View Profile', 
-            'Settings'
+            // 'Settings'
         ];
         
         const choice = prompt(`Profile Menu:\n${actions.map((a,i) => `${i+1}. ${a}`).join('\n')}\n\nEnter number:`);
         
         if (choice === '1') {
             this.changeProfilePicture();
-        }
+        } else if (choice === '2'){
+location.href = 'profile.html'
+        } 
+//         else if (choice === '3'){
+// location.href = 'profile.html'
+//         }
     }
 
     changeProfilePicture() {
