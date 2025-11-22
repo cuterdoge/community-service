@@ -141,6 +141,13 @@
             border-radius: 5px;
             border-left: 4px solid #007bff;
         }
+
+        /* Hide header auth buttons on volunteer page */
+        header .auth-buttons,
+        .header .auth-buttons,
+        nav .auth-buttons {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -149,7 +156,7 @@
             <!-- Login Prompt Section -->
             <div id="login-prompt" class="login-prompt">
                 <div class="row justify-content-center">
-                    <div class="col-md-6">
+                    <div class="col-md-10 col-lg-8">
                         <h1 class="display-5 fw-bold">Welcome to Volunteer Hub</h1>
                         <p class="lead">Please log in to view and book time slots</p>
                         <div class="auth-buttons">

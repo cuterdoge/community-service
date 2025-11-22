@@ -163,25 +163,26 @@
 }
 
 .auth-buttons .login-btn {
-    color: #4f46e5;
-    border: 1px solid #4f46e5;
+    color:  black;
+    border: 1px solid #afd9ec;
     background: white;
 }
 
 .auth-buttons .login-btn:hover {
-    background: #4f46e5;
+    background-color: #74cff3;
     color: white;
 }
 
 .auth-buttons .register-btn {
-    background: #4f46e5;
-    color: white;
-    border: 1px solid #4f46e5;
+    background-color: #a1c2ce;
+    border-color: #afd9ec;
+    color: #000;
 }
 
 .auth-buttons .register-btn:hover {
-    background: #3730a3;
-    border-color: #3730a3;
+     background-color: #74cff3;
+    border-color: #85d7e4;
+    color: #000;
 }
 
 /* Mobile Responsive */
