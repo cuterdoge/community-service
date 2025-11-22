@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Volunteer Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Volunteer Registration & Schedule</h1>
+
+    <!-- Volunteer registration form -->
+    <div id="registration-form-section">
+        <h2>Register as Volunteer</h2>
+        <form id="registration-form">
+            <input id="vol-name" placeholder="Full Name" required>
+            <input id="vol-email" placeholder="Email" required>
+            <input id="vol-phone" placeholder="Phone Number" required>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <!-- Timetable section (hidden initially) -->
+    <div id="timetable-section" style="display:none;">
+        <h2>Available Time Slots</h2>
+        <div id="schedule-grid"></div>
+    </div>
+
+    <!-- Admin button -->
+    <div>
+        <button onclick="location.href='admin.html'">Admin Login</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

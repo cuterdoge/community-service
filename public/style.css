@@ -1,0 +1,35 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+input {
+    display:block;
+    margin: 5px 0;
+    padding:5px;
+}
+
+button {
+    margin-top: 10px;
+    padding:5px 10px;
+    cursor:pointer;
+}
+
+.slot {
+    display:inline-block;
+    margin:5px;
+    padding:10px;
+    border:1px solid #ccc;
+    cursor:pointer;
+}
+
+.slot.mine {
+    background-color: #4f46e5;
+    color:white;
+}
+
+.slot.booked {
+    background-color: #f87171;
+    color:white;
+    cursor:not-allowed;
+}
