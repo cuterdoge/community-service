@@ -39,13 +39,91 @@ class HeaderManager {
                     </nav>
                 </div>
                 <div class="header-right" id="header-auth">
+                    <button class="mobile-menu-toggle" onclick="headerManager.toggleMobileMenu()">
+                        <span class="hamburger-icon"></span>
+                        <span class="hamburger-icon"></span>
+                        <span class="hamburger-icon"></span>
+                    </button>
                     ${this.renderAuthSection()}
                 </div>
             </div>
-
-            
+            <div class="mobile-nav-overlay">
+                <nav class="mobile-nav-menu">
+                    <a href="about.html">About</a>
+                    <a href="gallery.html">Gallery</a>
+                    <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer'}</a>
+                    ${this.currentUser && !this.currentUser.isAdmin ? '<a href="profile.html">My Profile</a>' : ''}
+                </nav>
+                ${this.renderMobileAuthButtons()}
+            </div>
         `;
         this.attachEventListeners();
+        this.attachMobileMenuEvents();
+    }
+
+    toggleMobileMenu() {
+        const toggle = document.querySelector('.mobile-menu-toggle');
+        const overlay = document.querySelector('.mobile-nav-overlay');
+        
+        toggle.classList.toggle('active');
+        overlay.classList.toggle('active');
+        
+        // Prevent body scroll when menu is open
+        if (overlay.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    renderMobileAuthButtons() {
+        if (this.currentUser) {
+            return `
+                <div class="mobile-auth-buttons">
+                    <div style="padding: 20px 0; border-bottom: 1px solid #e5e7eb;">
+                        <div style="font-weight: 600; color: #111827; margin-bottom: 5px;">${this.currentUser.name}</div>
+                        <div style="font-size: 14px; color: #6b7280;">${this.currentUser.email}</div>
+                    </div>
+                    <button onclick="headerManager.logout()" style="padding: 12px 20px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">Logout</button>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="mobile-auth-buttons">
+                    <a href="login.html" class="login-btn">Login</a>
+                    <a href="register.html" class="register-btn">Register</a>
+                </div>
+            `;
+        }
+    }
+
+    attachMobileMenuEvents() {
+        // Close menu when clicking on nav links
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-menu a');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                this.closeMobileMenu();
+            });
+        });
+
+        // Close menu when clicking outside
+        const overlay = document.querySelector('.mobile-nav-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    this.closeMobileMenu();
+                }
+            });
+        }
+    }
+
+    closeMobileMenu() {
+        const toggle = document.querySelector('.mobile-menu-toggle');
+        const overlay = document.querySelector('.mobile-nav-overlay');
+        
+        if (toggle) toggle.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     renderAuthSection() {

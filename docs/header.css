@@ -41,6 +41,16 @@
     text-decoration: none;
 }
 
+.logo-img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+.navbar-brand {
+    width: 150px;   /* change this to resize the logo */
+}
+
+
 .main-nav {
     display: flex;
     gap: 20px;
@@ -185,6 +195,125 @@
     color: #000;
 }
 
+/* Mobile hamburger menu */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #374151;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+    background-color: #f3f4f6;
+}
+
+.hamburger-icon {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: #374151;
+    margin: 5px 0;
+    transition: 0.3s;
+}
+
+.mobile-menu-toggle.active .hamburger-icon:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.mobile-menu-toggle.active .hamburger-icon:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-toggle.active .hamburger-icon:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
+/* Mobile navigation overlay */
+.mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background-color: white;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.mobile-nav-overlay.active {
+    display: block;
+}
+
+.mobile-nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.mobile-nav-menu a {
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+    padding: 15px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 16px;
+}
+
+.mobile-nav-menu a:last-child {
+    border-bottom: none;
+}
+
+.mobile-nav-menu a:hover {
+    color: #4f46e5;
+}
+
+.mobile-auth-buttons {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.mobile-auth-buttons .login-btn,
+.mobile-auth-buttons .register-btn {
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.mobile-auth-buttons .login-btn {
+    color: black;
+    border: 2px solid #afd9ec;
+    background: white;
+}
+
+.mobile-auth-buttons .login-btn:hover {
+    background-color: #74cff3;
+    color: white;
+}
+
+.mobile-auth-buttons .register-btn {
+    background-color: #a1c2ce;
+    border: 2px solid #afd9ec;
+    color: #000;
+}
+
+.mobile-auth-buttons .register-btn:hover {
+    background-color: #74cff3;
+    border-color: #85d7e4;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .header-content {
@@ -196,11 +325,19 @@
     }
     
     .main-nav {
-        display: none; /* Hide nav on mobile, can add hamburger menu later */
+        display: none;
+    }
+    
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    .auth-buttons {
+        display: none;
     }
     
     .user-info {
-        display: none; /* Hide email on mobile */
+        display: none;
     }
     
     .user-profile {
