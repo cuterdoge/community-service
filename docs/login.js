@@ -63,7 +63,8 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             const userInfo = {
                 email: data.user.email,
                 name: data.user.name,
-                id: data.user.id
+                id: data.user.id,
+                isAdmin: data.user.isAdmin || false
             };
             
             // Transfer profile picture from temp storage if exists

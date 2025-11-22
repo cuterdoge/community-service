@@ -27,12 +27,13 @@ class HeaderManager {
         header.innerHTML = `
             <div class="header-content">
                 <div class="header-left">
-                    <a href="index.html" class="logo">
-                        <h2>Joy Home Connect</h2>
-                    </a>
+                   <a class="navbar-brand d-flex align-items-center" href="index.html">
+                  <img src="images/logo.png" alt="Joy Home Connect" height="40" class="me-2"> 
+                
+                     </a>
                     <nav class="main-nav">
-                        <a href="about.html"> 'About '</a>
-                        <a href="gallery.html">'Gallery '}</a>
+                        <a class="nav-link" href="about.html">About</a>
+                        <a class="nav-link" href="gallery.html">Gallery</a>
                         <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer '}</a>
                         ${this.currentUser && !this.currentUser.isAdmin ? '<a href="profile.html">My Profile</a>' : ''}
                     </nav>
@@ -41,6 +42,8 @@ class HeaderManager {
                     ${this.renderAuthSection()}
                 </div>
             </div>
+
+            
         `;
         this.attachEventListeners();
     }
@@ -57,7 +60,7 @@ class HeaderManager {
                         <span class="user-email">${this.currentUser.email}</span>
                     </div>
                     <div class="user-actions">
-                        <button onclick="headerManager.showProfileMenu()" class="profile-btn">⚙️</button>
+
                         <button onclick="headerManager.logout()" class="logout-btn">Logout</button>
                     </div>
                 </div>
@@ -88,7 +91,9 @@ class HeaderManager {
 
     attachEventListeners() {
         // Refresh auth status when returning to tab
-        window.addEventListener('focus', () => this.checkAuthStatus());
+        const runAuth = () => this.checkAuthStatus();
+        window.removeEventListener('focus', runAuth);
+        window.addEventListener('focus', runAuth);
     }
 
     showProfileMenu() {
