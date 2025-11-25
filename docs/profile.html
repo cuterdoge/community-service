@@ -5,6 +5,75 @@
     <title>Profile - Community Hub</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="header.css">
+    <style>
+        .volunteer-slots-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .volunteer-slots-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .booking-date {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .booking-time {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .booking-actions {
+            flex: 1;
+            text-align: right;
+        }
+        
+        .cancel-btn-small {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .cancel-btn-small:hover {
+            background-color: #c82333;
+        }
+        
+        @media (max-width: 768px) {
+            .booking-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .booking-date, .booking-time, .booking-actions {
+                margin: 5px 0;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="login-required" class="form-container">
@@ -63,6 +132,14 @@
                 <button type="submit" class="update-btn">Update Profile</button>
                 <button type="button" onclick="window.history.back()" class="cancel-btn">Cancel</button>
             </form>
+            
+            <!-- My Volunteer Slots Section -->
+            <div class="volunteer-slots-section">
+                <h2>My Volunteer Slots</h2>
+                <div id="my-volunteer-slots" class="slots-container">
+                    <p>Loading your volunteer slots...</p>
+                </div>
+            </div>
         </div>
     </div>
 

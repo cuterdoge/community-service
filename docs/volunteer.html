@@ -230,12 +230,35 @@
                     </div>
                 </div>
 
-                <!-- Timetable section -->
-                <div id="timetable-section">
-                    <div class="row">
-                        <div class="col-12">
-                            <h2 class="mb-4">Available Time Slots</h2>
-                            <div id="schedule-grid" class="bg-light p-4 rounded"></div>
+                <!-- Volunteer Booking Form -->
+                <div id="volunteer-booking-section">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <h2 class="mb-4">Book Your Volunteer Slot</h2>
+                            
+                            <form id="volunteerBookingForm" class="bg-light p-4 rounded">
+                                <!-- Date Selection -->
+                                <div class="mb-3">
+                                    <label class="form-label">Preferred Volunteer Date *</label>
+                                    <input type="date" class="form-control date-input" name="volunteerDate" id="volunteerDate" required>
+                                </div>
+                                
+                                <!-- Time Selection -->
+                                <div class="mb-3">
+                                    <label class="form-label">Preferred Time *</label>
+                                    <select class="form-control" name="volunteerTime" id="volunteerTime" required>
+                                        <option value="">Select a time slot</option>
+                                        <option value="Morning">Morning (9am-12pm)</option>
+                                        <option value="Afternoon">Afternoon (1pm-5pm)</option>
+                                        <option value="Night">Night (6pm-9pm)</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Submit Button -->
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">Book Volunteer Slot</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -248,7 +271,7 @@
                             <div class="btn-group mb-3" role="group">
                                 <button onclick="resetAllSlots()" class="btn btn-warning">Reset All Bookings</button>
                                 <button onclick="viewAllBookings()" class="btn btn-info">View All Bookings</button>
-                                <button onclick="changeScheduleDates()" class="btn btn-primary">Change Schedule Dates</button>
+                                <button onclick="manageUnavailableDates()" class="btn btn-danger">Manage Unavailable Dates</button>
                             </div>
                             <div id="admin-bookings" class="mt-4"></div>
                         </div>
@@ -281,7 +304,80 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             headerManager = new HeaderManager();
+            
+            // Set default date to today
+            const dateInput = document.getElementById('volunteerDate');
+            if (dateInput) {
+                dateInput.valueAsDate = new Date();
+            }
+            
+            // Handle form submission
+            const bookingForm = document.getElementById('volunteerBookingForm');
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleVolunteerBooking();
+                });
+            }
         });
+        
+        async function handleVolunteerBooking() {
+            const date = document.getElementById('volunteerDate').value;
+            const time = document.getElementById('volunteerTime').value;
+            
+            if (!date || !time) {
+                alert('Please select both date and time');
+                return;
+            }
+            
+            // Check if date is unavailable
+            try {
+                const checkRes = await fetch('/checkAvailability', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ date: date })
+                });
+                
+                const checkData = await checkRes.json();
+                if (!checkData.available) {
+                    alert('❌ This date is not available for volunteering. Please select a different date.');
+                    return;
+                }
+            } catch (err) {
+                console.error('Availability check error:', err);
+            }
+            
+            try {
+                const slotId = `${date}-${time}`;
+                const res = await fetch('/book', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: currentUser.email,
+                        name: currentUser.name,
+                        slot: slotId
+                    })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    alert(`✅ Your volunteer slot has been booked successfully!\n\nDate: ${formattedDate}\nTime: ${time}\n\nThank you for volunteering with Joy Home Connect!`);
+                    // Reset form
+                    document.getElementById('volunteerTime').value = '';
+                } else {
+                    alert(data.message || 'Failed to book slot');
+                }
+            } catch (err) {
+                console.error('Booking error:', err);
+                alert('Server error. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>

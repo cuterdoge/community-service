@@ -64,6 +64,14 @@ async function connectDB() {
         )
     `);
 
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS unavailable_dates (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            date DATE UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     // Initialize slots if empty
     const [rows] = await db.query('SELECT COUNT(*) AS count FROM slots');
     if (rows[0].count === 0) {
@@ -210,23 +218,30 @@ app.get('/timetable', async (req,res)=>{
     }
 });
 
-// --- Book/release slot ---
+// --- Book/release slot (new date-based system) ---
 app.post('/book', async (req,res)=>{
     try{
         const {email, name, slot} = req.body;
         if(!email || !slot) return res.json({success:false,message:'Missing fields'});
 
-        const [rows] = await db.query('SELECT booked_by FROM slots WHERE slot=?',[slot]);
-        if(rows.length===0) return res.json({success:false,message:'Slot not found'});
+        // Check if slot already exists
+        const [existing] = await db.query('SELECT * FROM slots WHERE slot=?',[slot]);
+        
+        if(existing.length === 0) {
+            // Create new slot if it doesn't exist
+            await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,?)',[slot, email]);
+            res.json({success:true});
+        } else {
+            // Update existing slot
+            const bookedBy = existing[0].booked_by;
+            if(bookedBy && bookedBy!==email) return res.json({success:false,message:'Slot already booked by another user'});
 
-        const bookedBy = rows[0].booked_by;
-        if(bookedBy && bookedBy!==email) return res.json({success:false,message:'Slot already booked by another user'});
-
-        const newValue = bookedBy===email ? null : email;
-        await db.query('UPDATE slots SET booked_by=? WHERE slot=?',[newValue,slot]);
-        res.json({success:true});
+            const newValue = bookedBy===email ? null : email;
+            await db.query('UPDATE slots SET booked_by=? WHERE slot=?',[newValue,slot]);
+            res.json({success:true});
+        }
     }catch(err){
-        console.error(err);
+        console.error('Booking error:', err);
         res.json({success:false,message:'Database error'});
     }
 });
@@ -289,41 +304,156 @@ app.post('/reset', async (req,res)=>{
     }
 });
 
-// --- Admin set schedule dates and days ---
-app.post('/setScheduleDates', async (req,res)=>{
+// --- Check if date is available for volunteering ---
+app.post('/checkAvailability', async (req,res)=>{
     try{
-        const { weekStartDate, activeDays, adminEmail } = req.body;
+        const { date } = req.body;
+        if(!date) return res.json({available:true}); // Default to available if no date provided
+        
+        const [rows] = await db.query('SELECT * FROM unavailable_dates WHERE date=?',[date]);
+        res.json({available: rows.length === 0});
+    }catch(err){
+        console.error('Availability check error:', err);
+        res.json({available:true}); // Default to available on error
+    }
+});
+
+// --- Get all bookings for admin ---
+app.get('/allBookings', async (req,res)=>{
+    try{
+        const [bookings] = await db.query(`
+            SELECT s.slot, s.booked_by, 
+                   COALESCE(v.name, 'Unknown User') as name 
+            FROM slots s
+            LEFT JOIN volunteers v ON s.booked_by = v.email
+            WHERE s.booked_by IS NOT NULL 
+            ORDER BY s.slot
+        `);
+        console.log('Found bookings:', bookings);
+        res.json({bookings: bookings});
+    }catch(err){
+        console.error('Get bookings error:', err);
+        res.json({bookings: []});
+    }
+});
+
+// --- Get user's bookings ---
+app.post('/myBookings', async (req,res)=>{
+    try{
+        const { email } = req.body;
+        if(!email) return res.json({bookings: []});
+        
+        const [bookings] = await db.query(`
+            SELECT slot, booked_by 
+            FROM slots 
+            WHERE booked_by = ? 
+            ORDER BY slot
+        `, [email]);
+        res.json({bookings: bookings});
+    }catch(err){
+        console.error('Get user bookings error:', err);
+        res.json({bookings: []});
+    }
+});
+
+// --- Get unavailable dates ---
+app.get('/getUnavailableDates', async (req,res)=>{
+    try{
+        const [dates] = await db.query('SELECT DATE_FORMAT(date, "%Y-%m-%d") as date FROM unavailable_dates ORDER BY date');
+        res.json({dates: dates.map(row => row.date)});
+    }catch(err){
+        console.error('Get unavailable dates error:', err);
+        res.json({dates: []});
+    }
+});
+
+// --- Set unavailable date (admin only) ---
+app.post('/setUnavailableDate', async (req,res)=>{
+    try{
+        const { date, adminEmail } = req.body;
+        console.log('Set unavailable date request:', { date, adminEmail });
+        console.log('Expected admin email:', config.app.admin.email);
         
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
+            console.log('Admin verification failed');
             return res.json({success:false,message:'Admin access required'});
         }
         
-        if (!weekStartDate) {
-            return res.json({success:false,message:'Week start date is required'});
+        if (!date) {
+            console.log('Date missing');
+            return res.json({success:false,message:'Date is required'});
         }
         
-        if (!activeDays || !Array.isArray(activeDays) || activeDays.length === 0) {
-            return res.json({success:false,message:'At least one active day is required'});
-        }
-        
-        // Clear all existing slots
-        await db.query('DELETE FROM slots');
-        
-        // Insert new slots only for selected days
-        const times = ['9am-12pm','1pm-3pm','4pm-6pm'];
-        for (const day of activeDays) {
-            for (const time of times) {
-                await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,NULL)', [`${day}-${time}`]);
-            }
-        }
-        
-        // Insert new week start date
-        await db.query('INSERT INTO schedule_dates (week_start_date) VALUES (?)', [weekStartDate]);
+        // Insert unavailable date (ignore if already exists)
+        console.log('Inserting unavailable date:', date);
+        await db.query('INSERT IGNORE INTO unavailable_dates (date) VALUES (?)', [date]);
+        console.log('Successfully inserted unavailable date');
         res.json({success:true});
     }catch(err){
-        console.error(err);
-        res.json({success:false,message:'Database error'});
+        console.error('Set unavailable date error:', err);
+        res.json({success:false,message:'Database error: ' + err.message});
+    }
+});
+
+// --- Remove unavailable date (admin only) ---
+app.post('/removeUnavailableDate', async (req,res)=>{
+    try{
+        const { date, adminEmail } = req.body;
+        console.log('Remove unavailable date request:', { date, adminEmail });
+        console.log('Expected admin email:', config.app.admin.email);
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            console.log('Admin verification failed for remove');
+            return res.json({success:false,message:'Admin access required'});
+        }
+        
+        if (!date) {
+            console.log('Date missing for remove');
+            return res.json({success:false,message:'Date is required'});
+        }
+        
+        console.log('Attempting to delete unavailable date:', date);
+        const [result] = await db.query('DELETE FROM unavailable_dates WHERE date=?', [date]);
+        console.log('Delete result:', result);
+        console.log('Rows affected:', result.affectedRows);
+        
+        res.json({success:true, message: `Removed ${result.affectedRows} date(s)`});
+    }catch(err){
+        console.error('Remove unavailable date error:', err);
+        res.json({success:false,message:'Database error: ' + err.message});
+    }
+});
+
+// --- Debug endpoint ---
+app.get('/debug', async (req,res)=>{
+    try{
+        // Check all tables
+        const [tables] = await db.query('SHOW TABLES');
+        console.log('All tables:', tables);
+        
+        // Check slots table
+        const [slots] = await db.query('SELECT * FROM slots LIMIT 10');
+        console.log('Slots in database:', slots);
+        
+        // Check volunteers table
+        const [volunteers] = await db.query('SELECT email, name FROM volunteers LIMIT 10');
+        console.log('Volunteers in database:', volunteers);
+        
+        // Check unavailable dates
+        const [unavailable] = await db.query('SELECT * FROM unavailable_dates');
+        console.log('Unavailable dates:', unavailable);
+        
+        res.json({
+            tables: tables,
+            slots: slots,
+            volunteers: volunteers,
+            unavailableDates: unavailable
+        });
+    }catch(err){
+        console.error('Debug error:', err);
+        res.json({error: err.message});
     }
 });
 

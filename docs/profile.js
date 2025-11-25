@@ -25,6 +25,7 @@ function checkAuthAndLoadProfile() {
     document.getElementById('profile-page').style.display = 'block';
     
     loadUserProfile();
+    loadMyVolunteerSlots();
 }
 
 function loadUserProfile() {
@@ -197,3 +198,86 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
         }
     }
 });
+
+// Load user's volunteer slots
+async function loadMyVolunteerSlots() {
+    try {
+        const res = await fetch('/myBookings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email: currentUser.email})
+        });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        
+        const data = await res.json();
+        const slotsContainer = document.getElementById('my-volunteer-slots');
+        
+        if (!data.bookings || data.bookings.length === 0) {
+            slotsContainer.innerHTML = '<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>';
+        } else {
+            slotsContainer.innerHTML = `
+                <div class="bookings-list">
+                    ${data.bookings.map(booking => {
+                        console.log('Booking slot:', booking.slot);
+                        const slotParts = booking.slot.split('-');
+                        const date = slotParts[0] + '-' + slotParts[1] + '-' + slotParts[2]; // YYYY-MM-DD
+                        const time = slotParts[3]; // Morning/Afternoon/Night
+                        
+                        const formattedDate = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        
+                        const timeDisplay = time === 'Morning' ? 'Morning (9am-12pm)' : 
+                                          time === 'Afternoon' ? 'Afternoon (1pm-5pm)' : 
+                                          time === 'Night' ? 'Night (6pm-9pm)' : time;
+                        
+                        return `<div class="booking-item">
+                            <div class="booking-date"><strong>${formattedDate}</strong></div>
+                            <div class="booking-time">${timeDisplay}</div>
+                            <div class="booking-actions">
+                                <button onclick="cancelVolunteerSlot('${booking.slot}')" class="cancel-btn-small">Cancel</button>
+                            </div>
+                        </div>`
+                    }).join('')}
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Failed to load volunteer slots:', err);
+        document.getElementById('my-volunteer-slots').innerHTML = '<p style="color: red;">Failed to load volunteer slots. Please try again.</p>';
+    }
+}
+
+// Cancel a volunteer slot
+async function cancelVolunteerSlot(slotId) {
+    if (!confirm('Are you sure you want to cancel this volunteer slot?')) {
+        return;
+    }
+    
+    try {
+        const res = await fetch('/book', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                email: currentUser.email,
+                name: currentUser.name,
+                slot: slotId
+            })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            alert('Volunteer slot cancelled successfully!');
+            loadMyVolunteerSlots(); // Refresh the list
+        } else {
+            alert(data.message || 'Failed to cancel slot');
+        }
+    } catch (err) {
+        console.error('Cancel error:', err);
+        alert('Server error. Please try again.');
+    }
+}
