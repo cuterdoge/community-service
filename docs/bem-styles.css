@@ -1,0 +1,493 @@
+/* ==========================================================================
+   BEM-Based Design System for Joy Home Connect
+   ========================================================================== */
+
+/* CSS Custom Properties */
+:root {
+    /* Primary Purple Gradient Theme */
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-gradient-hover: linear-gradient(135deg, #5a6fd8 0%, #6b42a3 100%);
+    --primary-color: #667eea;
+    --primary-dark: #5a6fd8;
+    --secondary-gradient: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    
+    /* Text Colors */
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-light: #9ca3af;
+    --text-white: #ffffff;
+    --text-accent: #4c5c85;
+    
+    /* Background Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-light: #f9fafb;
+    --bg-accent: #f8f9ff;
+    --bg-overlay: rgba(255, 255, 255, 0.95);
+    
+    /* Border & Shadow */
+    --border-light: #e5e7eb;
+    --border-medium: #d1d5db;
+    --border-primary: var(--primary-color);
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 15px;
+    --radius-xl: 25px;
+    --radius-round: 50%;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 30px rgba(102, 126, 234, 0.1);
+    --shadow-hover: 0 8px 30px rgba(102, 126, 234, 0.3);
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-smooth: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 15px;
+    --space-lg: 20px;
+    --space-xl: 30px;
+    --space-2xl: 40px;
+}
+
+/* ==========================================================================
+   Button Component
+   ========================================================================== */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    background: var(--primary-gradient);
+    color: var(--text-white);
+    text-decoration: none;
+    border-radius: var(--radius-xl);
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all var(--transition-smooth);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    gap: var(--space-sm);
+}
+
+.button:hover {
+    background: var(--primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    color: var(--text-white);
+    text-decoration: none;
+}
+
+.button--large {
+    padding: 16px 32px;
+    font-size: 18px;
+}
+
+.button--small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.button--secondary {
+    background: var(--secondary-gradient);
+}
+
+.button--outline {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.button--outline:hover {
+    background: var(--primary-gradient);
+    color: var(--text-white);
+    border-color: transparent;
+}
+
+.button--danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.button--success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.button--block {
+    width: 100%;
+}
+
+/* ==========================================================================
+   Card Component
+   ========================================================================== */
+.card {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    transition: all var(--transition-smooth);
+    box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card--donation {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card--form {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: var(--space-xl);
+}
+
+.card__header {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+}
+
+.card__body {
+    flex: 1;
+}
+
+.card__footer {
+    margin-top: auto;
+    padding-top: var(--space-lg);
+}
+
+/* ==========================================================================
+   Donation Component
+   ========================================================================== */
+.donation__hero {
+    background: var(--primary-gradient);
+    color: var(--text-white);
+    padding: 80px 0;
+    text-align: center;
+}
+
+.donation__image {
+    width: 80px;
+    height: 80px;
+    background: var(--primary-gradient);
+    border-radius: var(--radius-round);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-lg);
+    overflow: hidden;
+    position: relative;
+}
+
+.donation__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.donation__image--placeholder {
+    font-size: 35px;
+    color: var(--text-white);
+}
+
+.donation__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.donation__amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: var(--space-md) 0;
+}
+
+.donation__description {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.donation__impact {
+    background: var(--bg-accent);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin: var(--space-md) 0;
+    font-style: italic;
+    color: var(--text-accent);
+}
+
+.donation__quantity {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    margin: var(--space-md) 0;
+}
+
+.donation__quantity-btn {
+    width: 35px;
+    height: 35px;
+    border: 2px solid var(--primary-color);
+    background: var(--bg-primary);
+    color: var(--primary-color);
+    border-radius: var(--radius-round);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all var(--transition-fast);
+}
+
+.donation__quantity-btn:hover {
+    background: var(--primary-color);
+    color: var(--text-white);
+}
+
+.donation__quantity-input {
+    width: 60px;
+    text-align: center;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Form Component
+   ========================================================================== */
+.form__group {
+    margin-bottom: var(--space-lg);
+}
+
+.form__label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.form__input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: all var(--transition-fast);
+}
+
+.form__input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form__input:disabled {
+    background-color: var(--bg-light);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+.form__error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: var(--space-xs);
+    display: block;
+}
+
+.form__footer {
+    text-align: center;
+    margin-top: var(--space-lg);
+    color: var(--text-secondary);
+}
+
+.form__footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.form__footer a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Slot Component (Volunteer Scheduling)
+   ========================================================================== */
+.slot {
+    padding: var(--space-md);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    background: var(--bg-primary);
+}
+
+.slot:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.slot--mine {
+    background: var(--primary-gradient);
+    color: var(--text-white);
+    border-color: var(--primary-color);
+}
+
+.slot--booked {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    color: var(--text-white);
+    cursor: not-allowed;
+    border-color: #f87171;
+}
+
+.slot--booked:hover {
+    transform: none;
+    border-color: #f87171;
+}
+
+/* ==========================================================================
+   Header Component
+   ========================================================================== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid var(--border-light);
+}
+
+.header--fixed {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-overlay);
+    border-bottom: 1px solid var(--border-light);
+    border-left: 1px solid var(--border-light);
+    border-bottom-left-radius: var(--radius-md);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+}
+
+.header__user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.header__welcome {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+.u-text-center { text-align: center; }
+.u-text-left { text-align: left; }
+.u-text-right { text-align: right; }
+
+.u-mb-sm { margin-bottom: var(--space-sm); }
+.u-mb-md { margin-bottom: var(--space-md); }
+.u-mb-lg { margin-bottom: var(--space-lg); }
+.u-mb-xl { margin-bottom: var(--space-xl); }
+
+.u-mt-sm { margin-top: var(--space-sm); }
+.u-mt-md { margin-top: var(--space-md); }
+.u-mt-lg { margin-top: var(--space-lg); }
+.u-mt-xl { margin-top: var(--space-xl); }
+
+.u-hidden { display: none; }
+.u-visible { display: block; }
+
+/* ==========================================================================
+   Layout Classes
+   ========================================================================== */
+.grid {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.grid--3-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.flex {
+    display: flex;
+}
+
+.flex--center {
+    justify-content: center;
+    align-items: center;
+}
+
+.flex--between {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex--column {
+    flex-direction: column;
+}
+
+.flex--gap-sm { gap: var(--space-sm); }
+.flex--gap-md { gap: var(--space-md); }
+.flex--gap-lg { gap: var(--space-lg); }
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+@media (max-width: 768px) {
+    .donation__hero {
+        padding: 50px 0;
+    }
+    
+    .grid--3-col {
+        grid-template-columns: 1fr;
+    }
+    
+    .card--form {
+        margin: 20px auto;
+        padding: var(--space-lg);
+    }
+    
+    .button {
+        padding: 14px 20px;
+        font-size: 16px;
+    }
+    
+    .donation__amount {
+        font-size: 2rem;
+    }
+}
+
+/* ==========================================================================
+   Legacy Compatibility (for gradual migration)
+   ========================================================================== */
+.login-btn, .register-btn { @extend .button; }
+.btn { @extend .button; }
+.form-container { @extend .card, .card--form; }
+.form-group { @extend .form__group; }

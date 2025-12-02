@@ -78,6 +78,21 @@ async function loadDonationPackages() {
     }
 }
 
+// Helper function to get image name from package title
+function getPackageImageName(title) {
+    const imageMap = {
+        'Water Supply': 'water-supply.jpg',
+        'Blanket Bundle': 'blanket-bundle.jpg', 
+        'Cooking Oil': 'cooking-oil.jpg',
+        'Rice Supply': 'rice-supply.jpg',
+        'Medical Kit': 'medical-kit.jpg',
+        'School Supplies': 'school-supplies.jpg',
+        'Emergency Food': 'emergency-food.jpg',
+        'Hygiene Kit': 'hygiene-kit.jpg'
+    };
+    return imageMap[title] || 'donation-default.jpg';
+}
+
 // Fallback donation packages if database fails
 function loadFallbackPackages() {
     console.log('Loading fallback donation packages...');
@@ -182,24 +197,37 @@ function renderDonationPackages() {
     
     container.innerHTML = donationPackages.map(pkg => `
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-            <div class="donation-card">
-                <div class="donation-icon">${pkg.icon}</div>
-                <h4 class="text-center">${pkg.name}</h4>
-                <p class="text-center text-muted">${pkg.description}</p>
-                <div class="donation-amount text-center">RM ${pkg.price}</div>
-                <div class="donation-impact">${pkg.impact}</div>
-                <p class="text-sm text-muted">${pkg.details}</p>
-                
-                <div class="quantity-selector">
-                    <button class="quantity-btn" onclick="updateQuantity('${pkg.id}', -1)">-</button>
-                    <input type="number" class="quantity-input" id="qty-${pkg.id}" value="0" min="0" 
-                           onchange="setQuantity('${pkg.id}', this.value)">
-                    <button class="quantity-btn" onclick="updateQuantity('${pkg.id}', 1)">+</button>
+            <div class="card card--donation">
+                <div class="card__header">
+                    <div class="donation__image">
+                        <img src="images/${getPackageImageName(pkg.name)}" 
+                             alt="${pkg.name}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                             style="display: block;">
+                        <div class="donation__image--placeholder" style="display: none;">💝</div>
+                    </div>
+                    <h4 class="donation__title u-text-center">${pkg.name}</h4>
                 </div>
-                
-                <button class="btn donate-btn w-100" onclick="addToCart('${pkg.id}')">
-                    Add to Cart
-                </button>
+                <div class="card__body">
+                    <p class="donation__description u-text-center">${pkg.description}</p>
+                    <div class="donation__amount u-text-center">RM ${pkg.price}</div>
+                    <div class="donation__impact">
+                        <strong>Impact:</strong> ${pkg.impact}
+                    </div>
+                    <p class="u-text-center" style="font-size: 0.9rem; color: var(--text-secondary);">${pkg.details}</p>
+                    
+                    <div class="donation__quantity">
+                        <button class="donation__quantity-btn" onclick="updateQuantity('${pkg.id}', -1)">-</button>
+                        <input type="number" class="donation__quantity-input" id="qty-${pkg.id}" value="0" min="0" 
+                               onchange="setQuantity('${pkg.id}', this.value)">
+                        <button class="donation__quantity-btn" onclick="updateQuantity('${pkg.id}', 1)">+</button>
+                    </div>
+                </div>
+                <div class="card__footer">
+                    <button class="button button--block" onclick="addToCart('${pkg.id}')">
+                        Add to Cart
+                    </button>
+                </div>
             </div>
         </div>
     `).join('');
