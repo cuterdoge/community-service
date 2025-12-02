@@ -6,18 +6,22 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="header.css">
     <style>
-        .volunteer-slots-section {
+        .volunteer-slots-section, .donations-section {
             margin-top: 30px;
             padding: 20px;
             background-color: #f8f9fa;
             border-radius: 8px;
         }
         
-        .volunteer-slots-section h2 {
+        .volunteer-slots-section h2, .donations-section h2 {
             color: #333;
             margin-bottom: 20px;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
+        }
+        
+        .donations-section h2 {
+            border-bottom-color: #667eea;
         }
         
         .booking-item {
@@ -63,14 +67,139 @@
             background-color: #c82333;
         }
         
+        .donation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin: 15px 0;
+            background-color: white;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .donation-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .donation-info {
+            flex: 2;
+        }
+        
+        .donation-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .donation-date {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .donation-impact {
+            color: #667eea;
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        .donation-amount {
+            flex: 1;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .donation-actions {
+            flex: 1;
+            text-align: right;
+        }
+        
+        .receipt-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .receipt-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6b42a3);
+            transform: translateY(-1px);
+        }
+        
+        .no-donations {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .donate-now-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .donate-now-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6b42a3);
+            text-decoration: none;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .donation-stats {
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
         @media (max-width: 768px) {
-            .booking-item {
+            .booking-item, .donation-item {
                 flex-direction: column;
                 text-align: center;
             }
             
-            .booking-date, .booking-time, .booking-actions {
-                margin: 5px 0;
+            .booking-date, .booking-time, .booking-actions,
+            .donation-info, .donation-amount, .donation-actions {
+                margin: 10px 0;
+            }
+            
+            .donation-stats {
+                flex-direction: column;
+                gap: 15px;
             }
         }
     </style>
@@ -138,6 +267,14 @@
                 <h2>My Volunteer Slots</h2>
                 <div id="my-volunteer-slots" class="slots-container">
                     <p>Loading your volunteer slots...</p>
+                </div>
+            </div>
+            
+            <!-- My Donations Section -->
+            <div class="donations-section">
+                <h2>My Donations</h2>
+                <div id="my-donations" class="donations-container">
+                    <p>Loading your donation history...</p>
                 </div>
             </div>
         </div>
