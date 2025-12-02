@@ -8,36 +8,39 @@
     <link rel="stylesheet" href="header.css">
 </head>
 <body>
-    <h1>Volunteer Login</h1>
+    <div class="card card--form">
+        <div class="card__header">
+            <h1 class="u-text-center u-mb-lg">Volunteer Login</h1>
+        </div>
+        <div class="card__body">
+            <form id="login-form">
+                <div class="form__group">
+                    <label for="login-email" class="form__label">Email:</label>
+                    <input id="login-email" type="email" class="form__input" placeholder="Enter your email" required>
+                    <span class="form__error" id="email-error"></span>
+                </div>
 
-    <div class="form-container">
-        <form id="login-form">
-            <div class="form-group">
-                <label for="login-email">Email:</label>
-                <input id="login-email" type="email" placeholder="Enter your email" required>
-                <span class="error-message" id="email-error"></span>
+                <div class="form__group">
+                    <label for="login-password" class="form__label">Password:</label>
+                    <input id="login-password" type="password" class="form__input" placeholder="Enter your password" required>
+                    <span class="form__error" id="password-error"></span>
+                </div>
+
+                <div class="form__group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="remember-me">
+                        <span class="checkmark"></span>
+                        Remember me (keep me logged in)
+                    </label>
+                </div>
+
+                <button type="submit" class="button button--block">Login</button>
+            </form>
+
+            <div class="form__footer">
+                <p>Don't have an account? <a href="register.html">Register here</a></p>
+                <p><a href="index.html">← Back to Home</a></p>
             </div>
-
-            <div class="form-group">
-                <label for="login-password">Password:</label>
-                <input id="login-password" type="password" placeholder="Enter your password" required>
-                <span class="error-message" id="password-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="remember-me">
-                    <span class="checkmark"></span>
-                    Remember me (keep me logged in)
-                </label>
-            </div>
-
-            <button type="submit" class="login-btn">Login</button>
-        </form>
-
-        <div class="form-footer">
-            <p>Don't have an account? <a href="register.html">Register here</a></p>
-            <p><a href="index.html">← Back to Home</a></p>
         </div>
     </div>
 

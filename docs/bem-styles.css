@@ -487,7 +487,57 @@
 /* ==========================================================================
    Legacy Compatibility (for gradual migration)
    ========================================================================== */
-.login-btn, .register-btn { @extend .button; }
-.btn { @extend .button; }
-.form-container { @extend .card, .card--form; }
-.form-group { @extend .form__group; }
+.login-btn, .register-btn { 
+    background: var(--primary-gradient);
+    color: var(--text-white);
+    border-radius: var(--radius-xl);
+    border: none;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all var(--transition-smooth);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+}
+
+.login-btn:hover, .register-btn:hover {
+    background: var(--primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn { 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    background: var(--primary-gradient);
+    color: var(--text-white);
+    border-radius: var(--radius-xl);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all var(--transition-smooth);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+}
+
+.btn:hover {
+    background: var(--primary-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    color: var(--text-white);
+}
+
+.form-container { 
+    max-width: 400px;
+    margin: 50px auto;
+    padding: var(--space-xl);
+    background: var(--bg-primary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.form-group { 
+    margin-bottom: var(--space-lg);
+}
