@@ -72,6 +72,52 @@ async function connectDB() {
         )
     `);
 
+    // Create donation-related tables
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS donation_packages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            package_id VARCHAR(50) UNIQUE,
+            name VARCHAR(100) NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            impact_description TEXT,
+            icon VARCHAR(10),
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS donations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            transaction_id VARCHAR(50) UNIQUE,
+            donor_id INT,
+            donor_email VARCHAR(100),
+            donor_name VARCHAR(100),
+            total_amount DECIMAL(10,2) NOT NULL,
+            status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
+            payment_method JSON,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            processed_at TIMESTAMP NULL,
+            FOREIGN KEY (donor_id) REFERENCES volunteers(id) ON DELETE SET NULL
+        )
+    `);
+
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS donation_items (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            donation_id INT,
+            package_id VARCHAR(50),
+            package_name VARCHAR(100),
+            price DECIMAL(10,2),
+            quantity INT,
+            subtotal DECIMAL(10,2),
+            impact_description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (donation_id) REFERENCES donations(id) ON DELETE CASCADE
+        )
+    `);
+
     // Initialize slots if empty
     const [rows] = await db.query('SELECT COUNT(*) AS count FROM slots');
     if (rows[0].count === 0) {
@@ -91,6 +137,85 @@ async function connectDB() {
         const monday = new Date(today);
         monday.setDate(today.getDate() - today.getDay() + 1); // Get Monday of current week
         await db.query('INSERT INTO schedule_dates (week_start_date) VALUES (?)', [monday.toISOString().split('T')[0]]);
+    }
+
+    // Initialize donation packages if empty
+    const [packageRows] = await db.query('SELECT COUNT(*) AS count FROM donation_packages');
+    if (packageRows[0].count === 0) {
+        const donationPackages = [
+            {
+                package_id: 'water-supply',
+                name: 'Water Supply Package',
+                description: 'Clean drinking water for families',
+                price: 150.00,
+                impact_description: 'Provides water for 30 families for 1 week',
+                icon: '💧'
+            },
+            {
+                package_id: 'blanket-bundle',
+                name: 'Blanket Bundle',
+                description: 'Warm blankets for shelter',
+                price: 250.00,
+                impact_description: 'Provides 10 warm blankets for families in need',
+                icon: '🛏️'
+            },
+            {
+                package_id: 'cooking-oil',
+                name: 'Cooking Oil Package',
+                description: 'Essential cooking oil supply',
+                price: 120.00,
+                impact_description: 'Provides 10 bottles for community kitchen',
+                icon: '🫗'
+            },
+            {
+                package_id: 'rice-supply',
+                name: 'Rice Supply Package',
+                description: 'Staple food for families',
+                price: 300.00,
+                impact_description: 'Feeds 15 families for 1 month',
+                icon: '🍚'
+            },
+            {
+                package_id: 'medical-kit',
+                name: 'Medical Kit Bundle',
+                description: 'Complete medical supplies',
+                price: 500.00,
+                impact_description: 'Equips clinic with essential medical supplies',
+                icon: '🏥'
+            },
+            {
+                package_id: 'school-supplies',
+                name: 'School Supply Package',
+                description: 'Educational materials for children',
+                price: 400.00,
+                impact_description: 'Provides materials for 20 children',
+                icon: '📚'
+            },
+            {
+                package_id: 'emergency-food',
+                name: 'Emergency Food Package',
+                description: 'Nutritious emergency meals',
+                price: 800.00,
+                impact_description: 'Feeds 50 people for 1 week',
+                icon: '🥫'
+            },
+            {
+                package_id: 'hygiene-kit',
+                name: 'Hygiene Kit Bundle',
+                description: 'Personal care essentials',
+                price: 350.00,
+                impact_description: 'Provides hygiene items for 25 families',
+                icon: '🧼'
+            }
+        ];
+
+        for (const pkg of donationPackages) {
+            await db.query(`
+                INSERT INTO donation_packages (package_id, name, description, price, impact_description, icon) 
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [pkg.package_id, pkg.name, pkg.description, pkg.price, pkg.impact_description, pkg.icon]);
+        }
+        console.log('Initialized donation packages');
     }
 }
  connectDB().catch(err => {                                                                                          
@@ -426,6 +551,189 @@ app.post('/removeUnavailableDate', async (req,res)=>{
     }
 });
 
+// --- Get donation packages ---
+app.get('/donationPackages', async (req,res)=>{
+    try{
+        const [packages] = await db.query('SELECT * FROM donation_packages WHERE is_active = TRUE ORDER BY price ASC');
+        res.json({success: true, packages: packages});
+    }catch(err){
+        console.error('Get donation packages error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Process donation ---
+app.post('/processDonation', async (req,res)=>{
+    try {
+        const {donationData, donorInfo, paymentInfo} = req.body;
+        
+        if (!donationData || !donorInfo || !paymentInfo) {
+            return res.json({success: false, message: 'Missing required data'});
+        }
+
+        // Check if database is connected
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        // Start transaction
+        await db.beginTransaction();
+
+        try {
+            // Get donor ID from volunteers table
+            const [donor] = await db.query('SELECT id FROM volunteers WHERE email = ?', [donorInfo.email]);
+            const donorId = donor.length > 0 ? donor[0].id : null;
+
+            // Insert donation record
+            const [donationResult] = await db.query(`
+                INSERT INTO donations (transaction_id, donor_id, donor_email, donor_name, total_amount, status, payment_method, processed_at) 
+                VALUES (?, ?, ?, ?, ?, 'completed', ?, NOW())
+            `, [
+                donationData.transactionId,
+                donorId,
+                donorInfo.email,
+                donorInfo.name,
+                donationData.total,
+                JSON.stringify({
+                    cardName: paymentInfo.cardName,
+                    cardLast4: paymentInfo.cardLast4,
+                    expiryMonth: paymentInfo.expiryMonth,
+                    expiryYear: paymentInfo.expiryYear
+                })
+            ]);
+
+            const donationDbId = donationResult.insertId;
+
+            // Insert donation items
+            for (const item of donationData.items) {
+                await db.query(`
+                    INSERT INTO donation_items (donation_id, package_id, package_name, price, quantity, subtotal, impact_description) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `, [
+                    donationDbId,
+                    item.id,
+                    item.name,
+                    item.price,
+                    item.quantity,
+                    item.price * item.quantity,
+                    item.impact
+                ]);
+            }
+
+            // Commit transaction
+            await db.commit();
+
+            res.json({
+                success: true,
+                message: 'Donation processed successfully',
+                transactionId: donationData.transactionId
+            });
+
+        } catch (error) {
+            // Rollback transaction on error
+            await db.rollback();
+            throw error;
+        }
+
+    } catch(err) {
+        console.error('Process donation error:', err);
+        res.status(500).json({success: false, message: 'Failed to process donation'});
+    }
+});
+
+// --- Get user donations ---
+app.post('/getUserDonations', async (req,res)=>{
+    try {
+        const {email} = req.body;
+        
+        if (!email) {
+            return res.json({success: false, message: 'Email is required'});
+        }
+
+        // Get donations with items
+        const [donations] = await db.query(`
+            SELECT 
+                d.id,
+                d.transaction_id,
+                d.total_amount,
+                d.status,
+                d.created_at,
+                d.processed_at,
+                GROUP_CONCAT(
+                    JSON_OBJECT(
+                        'id', di.package_id,
+                        'name', di.package_name,
+                        'price', di.price,
+                        'quantity', di.quantity,
+                        'impact', di.impact_description
+                    ) SEPARATOR '|||'
+                ) as items
+            FROM donations d
+            LEFT JOIN donation_items di ON d.id = di.donation_id
+            WHERE d.donor_email = ?
+            GROUP BY d.id
+            ORDER BY d.created_at DESC
+        `, [email]);
+
+        // Parse the items JSON for each donation
+        const processedDonations = donations.map(donation => ({
+            ...donation,
+            items: donation.items ? donation.items.split('|||').map(item => JSON.parse(item)) : []
+        }));
+
+        res.json({success: true, donations: processedDonations});
+
+    } catch(err) {
+        console.error('Get user donations error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Get donation statistics (admin) ---
+app.get('/donationStats', async (req,res)=>{
+    try {
+        // Total donations
+        const [totalResult] = await db.query('SELECT COUNT(*) as count, SUM(total_amount) as total FROM donations WHERE status = "completed"');
+        
+        // Recent donations
+        const [recentDonations] = await db.query(`
+            SELECT d.transaction_id, d.donor_name, d.total_amount, d.created_at
+            FROM donations d
+            WHERE d.status = 'completed'
+            ORDER BY d.created_at DESC
+            LIMIT 10
+        `);
+
+        // Popular packages
+        const [popularPackages] = await db.query(`
+            SELECT 
+                di.package_name,
+                SUM(di.quantity) as total_quantity,
+                SUM(di.subtotal) as total_amount
+            FROM donation_items di
+            JOIN donations d ON di.donation_id = d.id
+            WHERE d.status = 'completed'
+            GROUP BY di.package_id, di.package_name
+            ORDER BY total_quantity DESC
+            LIMIT 5
+        `);
+
+        res.json({
+            success: true,
+            stats: {
+                totalDonations: totalResult[0].count || 0,
+                totalAmount: totalResult[0].total || 0,
+                recentDonations: recentDonations,
+                popularPackages: popularPackages
+            }
+        });
+
+    } catch(err) {
+        console.error('Get donation stats error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
 // --- Debug endpoint ---
 app.get('/debug', async (req,res)=>{
     try{
@@ -445,11 +753,24 @@ app.get('/debug', async (req,res)=>{
         const [unavailable] = await db.query('SELECT * FROM unavailable_dates');
         console.log('Unavailable dates:', unavailable);
         
+        // Check donation tables
+        const [donationPackages] = await db.query('SELECT * FROM donation_packages LIMIT 5');
+        console.log('Donation packages:', donationPackages);
+        
+        const [donations] = await db.query('SELECT * FROM donations LIMIT 5');
+        console.log('Donations:', donations);
+        
+        const [donationItems] = await db.query('SELECT * FROM donation_items LIMIT 5');
+        console.log('Donation items:', donationItems);
+        
         res.json({
             tables: tables,
             slots: slots,
             volunteers: volunteers,
-            unavailableDates: unavailable
+            unavailableDates: unavailable,
+            donationPackages: donationPackages,
+            donations: donations,
+            donationItems: donationItems
         });
     }catch(err){
         console.error('Debug error:', err);

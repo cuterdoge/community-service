@@ -3,60 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <title>Register - Community Hub</title>
+    <link rel="stylesheet" href="bem-styles.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="header.css">
 </head>
 <body>
-    <h1>Volunteer Registration</h1>
-
-    <div class="form-container">
-        <form id="register-form">
-            <div class="form-group">
-                <label for="reg-name">Full Name:</label>
-                <input id="reg-name" type="text" placeholder="Enter your full name" required>
-                <span class="error-message" id="name-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="reg-email">Email:</label>
-                <input id="reg-email" type="email" placeholder="example@gmail.com" required>
-                <span class="error-message" id="email-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="reg-phone">Phone Number:</label>
-                <input id="reg-phone" type="tel" placeholder="012-3456789" required>
-                <span class="error-message" id="phone-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="reg-password">Password:</label>
-                <input id="reg-password" type="password" placeholder="Enter your password (min 6 characters)" required>
-                <span class="error-message" id="password-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="reg-confirm-password">Confirm Password:</label>
-                <input id="reg-confirm-password" type="password" placeholder="Confirm your password" required>
-                <span class="error-message" id="confirm-password-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="reg-profile-pic">Profile Picture (Optional):</label>
-                <input id="reg-profile-pic" type="file" accept="image/jpeg,image/jpg,image/png">
-                <span class="file-info">JPG or PNG, max 1MB</span>
-                <span class="error-message" id="profile-pic-error"></span>
-                <div class="profile-preview" id="profile-preview" style="display:none;">
-                    <img id="preview-img" src="" alt="Preview">
+    <div class="card card--form">
+        <div class="card__header">
+            <h1 class="u-text-center u-mb-lg">Volunteer Registration</h1>
+        </div>
+        <div class="card__body">
+            <form id="register-form">
+                <div class="form__group">
+                    <label for="reg-name" class="form__label">Full Name:</label>
+                    <input id="reg-name" type="text" class="form__input" placeholder="Enter your full name" required>
+                    <span class="form__error" id="name-error"></span>
                 </div>
+
+                <div class="form__group">
+                    <label for="reg-email" class="form__label">Email:</label>
+                    <input id="reg-email" type="email" class="form__input" placeholder="example@gmail.com" required>
+                    <span class="form__error" id="email-error"></span>
+                </div>
+
+                <div class="form__group">
+                    <label for="reg-phone" class="form__label">Phone Number:</label>
+                    <input id="reg-phone" type="tel" class="form__input" placeholder="012-3456789" required>
+                    <span class="form__error" id="phone-error"></span>
+                </div>
+
+                <div class="form__group">
+                    <label for="reg-password" class="form__label">Password:</label>
+                    <input id="reg-password" type="password" class="form__input" placeholder="Enter your password (min 6 characters)" required>
+                    <span class="form__error" id="password-error"></span>
+                </div>
+
+                <div class="form__group">
+                    <label for="reg-confirm-password" class="form__label">Confirm Password:</label>
+                    <input id="reg-confirm-password" type="password" class="form__input" placeholder="Confirm your password" required>
+                    <span class="form__error" id="confirm-password-error"></span>
+                </div>
+
+                <div class="form__group">
+                    <label for="reg-profile-pic" class="form__label">Profile Picture (Optional):</label>
+                    <input id="reg-profile-pic" type="file" class="form__input" accept="image/jpeg,image/jpg,image/png">
+                    <span class="file-info">JPG or PNG, max 1MB</span>
+                    <span class="form__error" id="profile-pic-error"></span>
+                    <div class="profile-preview" id="profile-preview" style="display:none;">
+                        <img id="preview-img" src="" alt="Preview">
+                    </div>
+                </div>
+
+                <button type="submit" class="button button--block">Register</button>
+            </form>
+
+            <div class="form__footer">
+                <p>Already have an account? <a href="login.html">Login here</a></p>
+                <p><a href="index.html">← Back to Home</a></p>
             </div>
-
-            <button type="submit" class="register-btn">Register</button>
-        </form>
-
-        <div class="form-footer">
-            <p>Already have an account? <a href="login.html">Login here</a></p>
-            <p><a href="index.html">← Back to Home</a></p>
         </div>
     </div>
 

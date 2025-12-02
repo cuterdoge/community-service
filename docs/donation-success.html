@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Complete - Joy Home Connect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="header.css">
+    <style>
+        .success-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 50px 20px;
+            text-align: center;
+        }
+        
+        .success-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 50px 40px;
+            margin-bottom: 30px;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 50px;
+            color: white;
+            animation: checkmark 0.6s ease-in-out;
+        }
+        
+        @keyframes checkmark {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .success-title {
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .donation-details {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .impact-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .action-buttons {
+            margin-top: 40px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            margin: 10px;
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 12px 30px;
+            border-radius: 25px;
+            margin: 10px;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .receipt-section {
+            background: white;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .social-share {
+            margin-top: 30px;
+        }
+        
+        .share-btn {
+            background: #1da1f2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .share-btn.facebook { background: #1877f2; }
+        .share-btn.whatsapp { background: #25d366; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0">
+        <!-- Header will be injected here -->
+        
+        <div class="success-container">
+            <div class="success-card">
+                <div class="success-icon">✓</div>
+                <h1 class="success-title">Donation Successful!</h1>
+                <p class="lead">Thank you for your generous contribution. Your donation will make a real difference in our community.</p>
+                
+                <!-- Donation Details -->
+                <div class="donation-details">
+                    <h5 class="mb-3">📋 Donation Receipt</h5>
+                    <div id="donation-summary">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Impact Statement -->
+                <div class="impact-section">
+                    <h4 class="mb-3">💫 Your Amazing Impact</h4>
+                    <div id="impact-statement">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Receipt Download -->
+                <div class="receipt-section">
+                    <h6>📄 Digital Receipt</h6>
+                    <p class="mb-3">Your donation receipt has been saved to your profile and sent to your email.</p>
+                    <button class="btn btn-outline-primary" onclick="downloadReceipt()">
+                        Download Receipt (PDF)
+                    </button>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="profile.html" class="btn btn-primary">View My Donations</a>
+                    <a href="donations.html" class="btn btn-outline-primary">Make Another Donation</a>
+                </div>
+                
+                <!-- Social Share -->
+                <div class="social-share">
+                    <p class="text-muted mb-3">Share your good deed and inspire others:</p>
+                    <a href="#" class="share-btn facebook" onclick="shareOnFacebook()">Share on Facebook</a>
+                    <a href="#" class="share-btn" onclick="shareOnTwitter()">Share on Twitter</a>
+                    <a href="#" class="share-btn whatsapp" onclick="shareOnWhatsApp()">Share on WhatsApp</a>
+                </div>
+                
+                <div class="mt-5">
+                    <p class="text-muted">
+                        <small>
+                            Transaction ID: <span id="transaction-id"></span><br>
+                            Date: <span id="transaction-date"></span>
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="header.js"></script>
+    <script>
+        let donationData = null;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            headerManager = new HeaderManager();
+            initializeSuccessPage();
+        });
+        
+        function initializeSuccessPage() {
+            // Get completed donation data
+            donationData = JSON.parse(sessionStorage.getItem('completedDonation'));
+            
+            if (!donationData) {
+                alert('No donation data found.');
+                window.location.href = 'donations.html';
+                return;
+            }
+            
+            populateSuccessPage();
+            
+            // Clear the session data
+            sessionStorage.removeItem('completedDonation');
+        }
+        
+        function populateSuccessPage() {
+            // Populate donation summary
+            const summaryContainer = document.getElementById('donation-summary');
+            let summaryHTML = donationData.items.map(item => `
+                <div class="detail-row">
+                    <span>${item.name} (${item.quantity}x)</span>
+                    <span>RM ${item.quantity * item.price}</span>
+                </div>
+            `).join('');
+            
+            summaryHTML += `
+                <div class="detail-row">
+                    <span><strong>Total Donation</strong></span>
+                    <span><strong>RM ${donationData.total}</strong></span>
+                </div>
+            `;
+            
+            summaryContainer.innerHTML = summaryHTML;
+            
+            // Populate impact statement
+            const impactContainer = document.getElementById('impact-statement');
+            const impacts = donationData.items.map(item => 
+                `• ${item.impact} (${item.quantity}x)`
+            ).join('<br>');
+            
+            impactContainer.innerHTML = `
+                <div style="text-align: left;">
+                    ${impacts}
+                </div>
+                <p style="margin-top: 20px;"><em>Together, we're building stronger communities!</em></p>
+            `;
+            
+            // Populate transaction details
+            document.getElementById('transaction-id').textContent = donationData.transactionId;
+            document.getElementById('transaction-date').textContent = new Date(donationData.date).toLocaleDateString();
+        }
+        
+        function downloadReceipt() {
+            // In a real application, this would generate a proper PDF
+            const receiptContent = generateReceiptText();
+            const blob = new Blob([receiptContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `donation-receipt-${donationData.transactionId}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function generateReceiptText() {
+            return `
+DONATION RECEIPT
+Joy Home Connect
+
+Transaction ID: ${donationData.transactionId}
+Date: ${new Date(donationData.date).toLocaleString()}
+Donor: ${donationData.donor.name}
+Email: ${donationData.donor.email}
+
+DONATION ITEMS:
+${donationData.items.map(item => 
+    `${item.name} (${item.quantity}x) - RM ${item.quantity * item.price}`
+).join('\n')}
+
+TOTAL DONATION: RM ${donationData.total}
+
+IMPACT:
+${donationData.items.map(item => 
+    `• ${item.impact} (${item.quantity}x)`
+).join('\n')}
+
+Thank you for your generous contribution!
+Your donation will make a real difference in our community.
+            `;
+        }
+        
+        function shareOnFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(`I just donated RM ${donationData.total} to Joy Home Connect! Join me in making a difference in our community. 🙏💫`);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
+        }
+        
+        function shareOnTwitter() {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(`I just donated RM ${donationData.total} to @JoyHomeConnect! Join me in making a difference! 🙏💫 #Donation #Community`);
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+        }
+        
+        function shareOnWhatsApp() {
+            const text = encodeURIComponent(`I just made a donation of RM ${donationData.total} to Joy Home Connect! It feels great to help our community. You can donate too at ${window.location.href}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Volunteer Schedule - Joy Home Connect</title>
+    <link rel="stylesheet" href="bem-styles.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="header.css">
     <link rel="stylesheet" href="mobile.css">
@@ -215,17 +216,20 @@
 
             <!-- Main volunteer dashboard (hidden initially) -->
             <div id="volunteer-dashboard" style="display:none;">
-                <!-- Header Section -->
-                <div class="volunteer-header">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h1 class="display-6 fw-bold mb-0">Volunteer Schedule</h1>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <div class="user-info">
-                                <span id="welcome-message" class="me-3">Welcome, </span>
-                                <button onclick="logout()" class="btn btn-outline-danger">Logout</button>
-                            </div>
+                <!-- Hero Section -->
+                <section class="donation__hero mb-5">
+                    <div class="container">
+                        <h1 class="display-4 fw-bold mb-4">Volunteer Schedule</h1>
+                        <p class="lead mb-0">Choose your volunteer time slots to help families in need</p>
+                    </div>
+                </section>
+
+                <!-- User Welcome -->
+                <div class="row justify-content-end mb-4">
+                    <div class="col-auto">
+                        <div class="header__user-info">
+                            <span id="welcome-message" class="header__welcome me-3">Welcome, </span>
+                            <button onclick="logout()" class="button button--danger button--small">Logout</button>
                         </div>
                     </div>
                 </div>
@@ -234,46 +238,51 @@
                 <div id="volunteer-booking-section">
                     <div class="row justify-content-center">
                         <div class="col-md-6">
-                            <h2 class="mb-4">Book Your Volunteer Slot</h2>
-                            
-                            <form id="volunteerBookingForm" class="bg-light p-4 rounded">
-                                <!-- Date Selection -->
-                                <div class="mb-3">
-                                    <label class="form-label">Preferred Volunteer Date *</label>
-                                    <input type="date" class="form-control date-input" name="volunteerDate" id="volunteerDate" required>
+                            <div class="card">
+                                <div class="card__header">
+                                    <h2 class="u-text-center u-mb-md">Book Your Volunteer Slot</h2>
                                 </div>
-                                
-                                <!-- Time Selection -->
-                                <div class="mb-3">
-                                    <label class="form-label">Preferred Time *</label>
-                                    <select class="form-control" name="volunteerTime" id="volunteerTime" required>
-                                        <option value="">Select a time slot</option>
-                                        <option value="Morning">Morning (9am-12pm)</option>
-                                        <option value="Afternoon">Afternoon (1pm-5pm)</option>
-                                        <option value="Night">Night (6pm-9pm)</option>
-                                    </select>
+                                <div class="card__body">
+                                    <form id="volunteerBookingForm">
+                                        <!-- Date Selection -->
+                                        <div class="form__group">
+                                            <label class="form__label">Preferred Volunteer Date *</label>
+                                            <input type="date" class="form__input" name="volunteerDate" id="volunteerDate" required>
+                                        </div>
+                                        
+                                        <!-- Time Selection -->
+                                        <div class="form__group">
+                                            <label class="form__label">Preferred Time *</label>
+                                            <select class="form__input" name="volunteerTime" id="volunteerTime" required>
+                                                <option value="">Select a time slot</option>
+                                                <option value="Morning">Morning (9am-12pm)</option>
+                                                <option value="Afternoon">Afternoon (1pm-5pm)</option>
+                                                <option value="Night">Night (6pm-9pm)</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Submit Button -->
+                                        <button type="submit" class="button button--block button--large">Book Volunteer Slot</button>
+                                    </form>
                                 </div>
-                                
-                                <!-- Submit Button -->
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg">Book Volunteer Slot</button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Admin section (only shown for admins) -->
-                <div id="admin-section" style="display:none;" class="admin-section">
-                    <div class="row">
-                        <div class="col-12">
-                            <h3 class="mb-3">Admin Controls</h3>
-                            <div class="btn-group mb-3" role="group">
-                                <button onclick="resetAllSlots()" class="btn btn-warning">Reset All Bookings</button>
-                                <button onclick="viewAllBookings()" class="btn btn-info">View All Bookings</button>
-                                <button onclick="manageUnavailableDates()" class="btn btn-danger">Manage Unavailable Dates</button>
+                <div id="admin-section" style="display:none;" class="u-mt-xl">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3 class="u-text-center">Admin Controls</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="flex flex--center flex--gap-md u-mb-lg">
+                                <button onclick="resetAllSlots()" class="button button--secondary">Reset All Bookings</button>
+                                <button onclick="viewAllBookings()" class="button button--outline">View All Bookings</button>
+                                <button onclick="manageUnavailableDates()" class="button button--danger">Manage Unavailable Dates</button>
                             </div>
-                            <div id="admin-bookings" class="mt-4"></div>
+                            <div id="admin-bookings" class="u-mt-lg"></div>
                         </div>
                     </div>
                 </div>

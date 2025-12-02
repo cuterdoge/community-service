@@ -26,6 +26,7 @@ function checkAuthAndLoadProfile() {
     
     loadUserProfile();
     loadMyVolunteerSlots();
+    loadMyDonations();
 }
 
 function loadUserProfile() {
@@ -280,4 +281,218 @@ async function cancelVolunteerSlot(slotId) {
         console.error('Cancel error:', err);
         alert('Server error. Please try again.');
     }
+}
+
+// Load user's donation history
+async function loadMyDonations() {
+    try {
+        const donationsContainer = document.getElementById('my-donations');
+        donationsContainer.innerHTML = '<p>Loading your donation history...</p>';
+        
+        // Get donations from database
+        const response = await fetch('/getUserDonations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: currentUser.email
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to load donations');
+        }
+        
+        const donationHistory = result.donations || [];
+        
+        if (donationHistory.length === 0) {
+            donationsContainer.innerHTML = `
+                <div class="no-donations">
+                    <p>🎯 You haven't made any donations yet.</p>
+                    <p>Start making a difference in our community today!</p>
+                    <a href="donations.html" class="donate-now-btn">Make Your First Donation</a>
+                </div>
+            `;
+            return;
+        }
+        
+        // Calculate donation stats
+        const totalAmount = donationHistory.reduce((sum, donation) => sum + parseFloat(donation.total_amount), 0);
+        const totalDonations = donationHistory.length;
+        const totalItems = donationHistory.reduce((sum, donation) => 
+            sum + donation.items.reduce((itemSum, item) => itemSum + parseInt(item.quantity), 0), 0);
+        
+        // Render donations with stats
+        donationsContainer.innerHTML = `
+            <div class="donation-stats">
+                <div class="stat-item">
+                    <span class="stat-number">${totalDonations}</span>
+                    <span class="stat-label">Donations Made</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">RM ${totalAmount.toFixed(2)}</span>
+                    <span class="stat-label">Total Donated</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${totalItems}</span>
+                    <span class="stat-label">Items Donated</span>
+                </div>
+            </div>
+            
+            <div class="donations-list">
+                ${donationHistory.map(donation => renderDonationItem(donation)).join('')}
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error loading donations:', error);
+        document.getElementById('my-donations').innerHTML = 
+            '<p style="color: red;">Failed to load donation history. Please try again.</p>';
+    }
+}
+
+// Render individual donation item
+function renderDonationItem(donation) {
+    const donationDate = new Date(donation.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    const impactSummary = donation.items.length > 1 
+        ? `${donation.items.length} different items donated`
+        : donation.items[0].impact;
+    
+    return `
+        <div class="donation-item">
+            <div class="donation-info">
+                <div class="donation-title">Donation #${donation.transaction_id}</div>
+                <div class="donation-date">📅 ${donationDate}</div>
+                <div class="donation-impact">💫 ${impactSummary}</div>
+            </div>
+            <div class="donation-amount">RM ${parseFloat(donation.total_amount).toFixed(2)}</div>
+            <div class="donation-actions">
+                <button onclick="viewDonationReceipt('${donation.transaction_id}')" class="receipt-btn">
+                    View Receipt
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// View donation receipt
+async function viewDonationReceipt(transactionId) {
+    try {
+        // Get donations from database to find the specific one
+        const response = await fetch('/getUserDonations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: currentUser.email
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            alert('Failed to load donation data');
+            return;
+        }
+        
+        const donation = result.donations.find(d => d.transaction_id === transactionId);
+        
+        if (!donation) {
+            alert('Receipt not found');
+            return;
+        }
+        
+        // Create receipt content
+        const receiptContent = generateReceiptHTML(donation);
+        
+        // Open in new window
+        const receiptWindow = window.open('', '_blank', 'width=600,height=800');
+        receiptWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Donation Receipt - ${transactionId}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                    .receipt-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                    .receipt-section { margin-bottom: 25px; }
+                    .receipt-section h3 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                    .item-row { display: flex; justify-content: space-between; padding: 5px 0; }
+                    .total-row { font-weight: bold; border-top: 2px solid #333; padding-top: 10px; margin-top: 15px; }
+                    .impact-section { background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                    .thank-you { text-align: center; color: #667eea; font-style: italic; margin-top: 30px; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>
+                ${receiptContent}
+                <div style="text-align: center; margin-top: 30px;">
+                    <button onclick="window.print()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Print Receipt</button>
+                </div>
+            </body>
+            </html>
+        `);
+        receiptWindow.document.close();
+        
+    } catch (error) {
+        console.error('Error viewing receipt:', error);
+        alert('Error loading receipt. Please try again.');
+    }
+}
+
+// Generate receipt HTML
+function generateReceiptHTML(donation) {
+    const donationDate = new Date(donation.created_at).toLocaleString();
+    
+    return `
+        <div class="receipt-header">
+            <h1>🏠 Joy Home Connect</h1>
+            <h2>Donation Receipt</h2>
+            <p>Thank you for making a difference!</p>
+        </div>
+        
+        <div class="receipt-section">
+            <h3>📋 Transaction Details</h3>
+            <p><strong>Transaction ID:</strong> ${donation.transaction_id}</p>
+            <p><strong>Date:</strong> ${donationDate}</p>
+            <p><strong>Donor:</strong> ${currentUser.name}</p>
+            <p><strong>Email:</strong> ${currentUser.email}</p>
+        </div>
+        
+        <div class="receipt-section">
+            <h3>🎁 Donation Items</h3>
+            ${donation.items.map(item => `
+                <div class="item-row">
+                    <span>${item.name} (${item.quantity}x)</span>
+                    <span>RM ${(item.quantity * item.price).toFixed(2)}</span>
+                </div>
+            `).join('')}
+            <div class="item-row total-row">
+                <span><strong>Total Donation</strong></span>
+                <span><strong>RM ${parseFloat(donation.total_amount).toFixed(2)}</strong></span>
+            </div>
+        </div>
+        
+        <div class="impact-section">
+            <h3>💫 Your Impact</h3>
+            ${donation.items.map(item => `
+                <p>• ${item.impact} (${item.quantity}x)</p>
+            `).join('')}
+        </div>
+        
+        <div class="thank-you">
+            <h3>🙏 Thank You!</h3>
+            <p>Your generous contribution will make a real difference in our community.<br>
+            Together, we're building stronger communities!</p>
+        </div>
+    `;
 }

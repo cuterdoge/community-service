@@ -34,6 +34,7 @@ class HeaderManager {
                     <nav class="main-nav">
                         <a class="nav-link" href="about.html">About</a>
                         <a class="nav-link" href="gallery.html">Gallery</a>
+                        <a class="nav-link" href="donations.html">Donations</a>
                         <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer '}</a>
                         ${this.currentUser && !this.currentUser.isAdmin ? '<a href="profile.html">My Profile</a>' : ''}
                     </nav>
@@ -51,6 +52,7 @@ class HeaderManager {
                 <nav class="mobile-nav-menu">
                     <a href="about.html">About</a>
                     <a href="gallery.html">Gallery</a>
+                    <a href="donations.html">Donations</a>
                     <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer'}</a>
                     ${this.currentUser && !this.currentUser.isAdmin ? '<a href="profile.html">My Profile</a>' : ''}
                 </nav>
