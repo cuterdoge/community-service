@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation System Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #test-results { margin-top: 20px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Donation System Debug Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Server Connectivity</h3>
+        <p>This page will help debug the donation packages loading issue.</p>
+        <button onclick="testServerConnection()">Test Server Connection</button>
+        <button onclick="testDonationPackagesAPI()">Test Donation Packages API</button>
+        <button onclick="testFallbackPackages()">Test Fallback Packages</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        function addResult(title, content, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-section ${type}`;
+            resultDiv.innerHTML = `
+                <h4>${title}</h4>
+                <pre>${content}</pre>
+                <small>Time: ${new Date().toLocaleTimeString()}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+        
+        async function testServerConnection() {
+            try {
+                addResult('Testing Server Connection', 'Attempting to connect to server...', 'info');
+                
+                const response = await fetch('/debug');
+                const data = await response.json();
+                
+                addResult('Server Connection ✅', JSON.stringify(data, null, 2), 'success');
+            } catch (error) {
+                addResult('Server Connection ❌', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDonationPackagesAPI() {
+            try {
+                addResult('Testing Donation Packages API', 'Fetching /donationPackages...', 'info');
+                
+                const response = await fetch('/donationPackages');
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('Donation Packages API ✅', JSON.stringify(data, null, 2), 'success');
+                } else {
+                    addResult('Donation Packages API ⚠️', 
+                        `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                addResult('Donation Packages API ❌', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function testFallbackPackages() {
+            const fallbackPackages = [
+                {
+                    id: 'water-supply',
+                    name: 'Water Supply Package',
+                    icon: '💧',
+                    price: 150,
+                    description: 'Clean drinking water for families',
+                    impact: 'Provides water for 30 families for 1 week'
+                },
+                {
+                    id: 'rice-supply',
+                    name: 'Rice Supply Package',
+                    icon: '🍚',
+                    price: 300,
+                    description: 'Staple food for families',
+                    impact: 'Feeds 15 families for 1 month'
+                }
+            ];
+            
+            addResult('Fallback Packages Test ✅', 
+                `Generated ${fallbackPackages.length} fallback packages:\n${JSON.stringify(fallbackPackages, null, 2)}`, 
+                'success');
+        }
+        
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            addResult('Page Loaded', 'Debug page is ready. Click buttons above to run tests.', 'info');
+        });
+    </script>
+</body>
+</html>
