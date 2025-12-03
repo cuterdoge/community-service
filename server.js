@@ -30,20 +30,28 @@ async function connectDB() {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`Database connection attempt ${attempt}/${maxRetries}...`);
-            // Use connection pool instead of single connection
-            db = mysql.createPool({
-                ...dbConfig,
-                connectionLimit: 10,
-                queueLimit: 0,
-                acquireTimeout: 30000,
-                timeout: 30000,
-                reconnect: true
-            });
-            console.log('Connected to MySQL database with SSL (using connection pool)');
+            db = await mysql.createConnection(dbConfig);
+            console.log('Connected to MySQL database with SSL');
             
-            // Test the connection pool
-            const [testResult] = await db.query('SELECT 1 as test');
-            console.log('Database connection pool test successful:', testResult);
+            // Test the connection
+            await db.ping();
+            console.log('Database connection test successful');
+            
+            // Keep connection alive with periodic pings
+            setInterval(async () => {
+                try {
+                    await db.ping();
+                    console.log('Database keepalive ping successful');
+                } catch (error) {
+                    console.error('Database keepalive failed:', error.message);
+                    // Attempt to reconnect
+                    try {
+                        await connectDB();
+                    } catch (reconnectError) {
+                        console.error('Reconnection failed:', reconnectError.message);
+                    }
+                }
+            }, 30000); // Ping every 30 seconds
             
             // Create tables if connected successfully
             try {
@@ -787,30 +795,19 @@ app.get('/debug', async (req,res)=>{
             return res.json({error: 'Database not connected'});
         }
 
-        // Test simple query first
+        // Test connection and transaction capability
         const [testQuery] = await db.query('SELECT 1 as test, NOW() as timestamp');
-        console.log('Debug test query:', testQuery);
         
-        // Check slots table
-        const [slots] = await db.query('SELECT COUNT(*) as count FROM slots');
-        console.log('Slots count:', slots);
-        
-        // Check volunteers table
-        const [volunteers] = await db.query('SELECT COUNT(*) as count FROM volunteers');
-        console.log('Volunteers count:', volunteers);
-        
-        // Check donation packages
-        const [donationPackages] = await db.query('SELECT COUNT(*) as count FROM donation_packages');
-        console.log('Donation packages count:', donationPackages);
+        // Test transaction support
+        await db.beginTransaction();
+        const [transactionTest] = await db.query('SELECT 2 as transaction_test');
+        await db.rollback();
         
         res.json({
             success: true,
-            connectionTest: testQuery,
-            counts: {
-                slots: slots[0].count,
-                volunteers: volunteers[0].count,
-                donationPackages: donationPackages[0].count
-            }
+            connectionActive: true,
+            transactionSupport: true,
+            timestamp: testQuery[0].timestamp
         });
     }catch(err){
         console.error('Debug error:', err);
