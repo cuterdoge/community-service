@@ -24,18 +24,49 @@ const dbConfig = config.database;
 let db;
 
 async function connectDB() {
-    try {
-        db = await mysql.createConnection(dbConfig);
-        console.log('Connected to MySQL database with SSL');
-        
-        // Test the connection
-        await db.ping();
-        console.log('Database connection test successful');
-    } catch (error) {
-        console.error('Failed to connect to database:', error.message);
-        throw error;
+    const maxRetries = 3;
+    const retryDelay = 3000; // 3 seconds
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Database connection attempt ${attempt}/${maxRetries}...`);
+            db = await mysql.createConnection(dbConfig);
+            console.log('Connected to MySQL database with SSL');
+            
+            // Test the connection
+            await db.ping();
+            console.log('Database connection test successful');
+            
+            // Create tables if connected successfully
+            try {
+                await createTables();
+                console.log('Database tables initialized successfully');
+            } catch (tableError) {
+                console.error('Table creation failed:', tableError.message);
+                // Don't fail the connection for table creation issues
+            }
+            return; // Success, exit the retry loop
+        } catch (error) {
+            console.error(`Database connection attempt ${attempt} failed:`, error.message);
+            
+            if (attempt === maxRetries) {
+                console.error('All database connection attempts failed. Server will continue but database features will be unavailable.');
+                // Don't throw error, let server start without database
+                return;
+            }
+            
+            console.log(`Retrying in ${retryDelay/1000} seconds...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
     }
+}
 
+async function createTables() {
+    if (!db) {
+        console.log('Database not connected, skipping table creation');
+        return;
+    }
+    
     // Create tables if not exist
     await db.query(`
         CREATE TABLE IF NOT EXISTS volunteers (
@@ -218,11 +249,19 @@ async function connectDB() {
         console.log('Initialized donation packages');
     }
 }
- connectDB().catch(err => {                                                                                          
-      console.error('Database connection failed:', err);                                                              
-      console.error('Full error details:', err.message);                                                              
-  });                                                                                                                 
-                                
+// Initialize database connection and start server
+async function initializeServer() {
+    try {
+        await connectDB();
+        console.log('✅ Database initialization completed');
+    } catch (err) {
+        console.error('❌ Database initialization failed:', err);
+        console.error('Server will continue without database functionality');
+    }
+}
+
+// Start database initialization
+initializeServer();
 
 // --- Volunteer registration ---
 app.post('/registerVolunteer', async (req,res)=>{
@@ -269,16 +308,9 @@ app.post('/login', async (req,res)=>{
         const {email,password} = req.body;
         if(!email || !password) return res.json({success:false,message:'Email and password are required'});
         
-        // Check if database is connected
-        if (!db) {
-            console.error('Database not connected');
-            return res.status(503).json({success:false,message:'Database connection unavailable'});
-        }
-        
-        // Check if this is admin login
+        // Check if this is admin login (works without database)
         if (email === config.app.admin.email) {
-            console.log('email', email)
-            console.log('adminemail', config.app.admin.email)
+            console.log('Admin login attempt for:', email);
             if (password === config.app.admin.password) {
                 return res.json({
                     success: true,
@@ -292,6 +324,12 @@ app.post('/login', async (req,res)=>{
             } else {
                 return res.json({success:false,message:'Invalid email or password'});
             }
+        }
+        
+        // For regular users, check if database is connected
+        if (!db) {
+            console.error('Database not connected - regular user login unavailable');
+            return res.status(503).json({success:false,message:'Database connection unavailable. Admin login still works.'});
         }
         
         // Find regular user by email
