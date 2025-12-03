@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ override: true });
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
@@ -30,12 +30,20 @@ async function connectDB() {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`Database connection attempt ${attempt}/${maxRetries}...`);
-            db = await mysql.createConnection(dbConfig);
-            console.log('Connected to MySQL database with SSL');
+            // Use connection pool instead of single connection
+            db = mysql.createPool({
+                ...dbConfig,
+                connectionLimit: 10,
+                queueLimit: 0,
+                acquireTimeout: 30000,
+                timeout: 30000,
+                reconnect: true
+            });
+            console.log('Connected to MySQL database with SSL (using connection pool)');
             
-            // Test the connection
-            await db.ping();
-            console.log('Database connection test successful');
+            // Test the connection pool
+            const [testResult] = await db.query('SELECT 1 as test');
+            console.log('Database connection pool test successful:', testResult);
             
             // Create tables if connected successfully
             try {
@@ -775,40 +783,34 @@ app.get('/donationStats', async (req,res)=>{
 // --- Debug endpoint ---
 app.get('/debug', async (req,res)=>{
     try{
-        // Check all tables
-        const [tables] = await db.query('SHOW TABLES');
-        console.log('All tables:', tables);
+        if (!db) {
+            return res.json({error: 'Database not connected'});
+        }
+
+        // Test simple query first
+        const [testQuery] = await db.query('SELECT 1 as test, NOW() as timestamp');
+        console.log('Debug test query:', testQuery);
         
         // Check slots table
-        const [slots] = await db.query('SELECT * FROM slots LIMIT 10');
-        console.log('Slots in database:', slots);
+        const [slots] = await db.query('SELECT COUNT(*) as count FROM slots');
+        console.log('Slots count:', slots);
         
         // Check volunteers table
-        const [volunteers] = await db.query('SELECT email, name FROM volunteers LIMIT 10');
-        console.log('Volunteers in database:', volunteers);
+        const [volunteers] = await db.query('SELECT COUNT(*) as count FROM volunteers');
+        console.log('Volunteers count:', volunteers);
         
-        // Check unavailable dates
-        const [unavailable] = await db.query('SELECT * FROM unavailable_dates');
-        console.log('Unavailable dates:', unavailable);
-        
-        // Check donation tables
-        const [donationPackages] = await db.query('SELECT * FROM donation_packages LIMIT 5');
-        console.log('Donation packages:', donationPackages);
-        
-        const [donations] = await db.query('SELECT * FROM donations LIMIT 5');
-        console.log('Donations:', donations);
-        
-        const [donationItems] = await db.query('SELECT * FROM donation_items LIMIT 5');
-        console.log('Donation items:', donationItems);
+        // Check donation packages
+        const [donationPackages] = await db.query('SELECT COUNT(*) as count FROM donation_packages');
+        console.log('Donation packages count:', donationPackages);
         
         res.json({
-            tables: tables,
-            slots: slots,
-            volunteers: volunteers,
-            unavailableDates: unavailable,
-            donationPackages: donationPackages,
-            donations: donations,
-            donationItems: donationItems
+            success: true,
+            connectionTest: testQuery,
+            counts: {
+                slots: slots[0].count,
+                volunteers: volunteers[0].count,
+                donationPackages: donationPackages[0].count
+            }
         });
     }catch(err){
         console.error('Debug error:', err);
