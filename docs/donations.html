@@ -82,6 +82,58 @@
                         <button class="button button--outline u-mt-md" onclick="clearCart()">Clear Cart</button>
                     </div>
                 </div>
+
+                <!-- Admin section (only shown for admins) -->
+                <div id="admin-section" style="display:none;" class="u-mt-xl">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3 class="u-text-center">Donation Management</h3>
+                        </div>
+                        <div class="card__body">
+                            <!-- Admin Navigation Tabs -->
+                            <div class="flex flex--center flex--gap-md u-mb-lg">
+                                <button onclick="showManagePackages()" class="button button--primary" id="manage-packages-btn">Manage Packages</button>
+                                <button onclick="showDonationHistory()" class="button button--outline" id="donation-history-btn">Donation History</button>
+                                <button onclick="showDonationStats()" class="button button--outline" id="donation-stats-btn">Statistics</button>
+                            </div>
+
+                            <!-- Manage Packages Section -->
+                            <div id="manage-packages-section" class="admin-content-section">
+                                <div class="flex flex--space-between flex--align-center u-mb-md">
+                                    <h4>Donation Packages</h4>
+                                    <button onclick="showCreatePackageModal()" class="button button--success">Add New Package</button>
+                                </div>
+                                <div id="admin-packages-list" class="u-mt-md">
+                                    <!-- Packages will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Donation History Section -->
+                            <div id="donation-history-section" class="admin-content-section" style="display:none;">
+                                <div class="flex flex--space-between flex--align-center u-mb-md">
+                                    <h4>All Donations</h4>
+                                    <div class="flex flex--gap-sm">
+                                        <input type="date" id="filter-date-from" class="form-control" placeholder="From">
+                                        <input type="date" id="filter-date-to" class="form-control" placeholder="To">
+                                        <button onclick="filterDonations()" class="button button--outline">Filter</button>
+                                        <button onclick="exportDonations()" class="button button--secondary">Export</button>
+                                    </div>
+                                </div>
+                                <div id="admin-donations-list" class="u-mt-md">
+                                    <!-- Donations will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Statistics Section -->
+                            <div id="donation-stats-section" class="admin-content-section" style="display:none;">
+                                <h4 class="u-mb-md">Donation Statistics</h4>
+                                <div id="admin-stats-content" class="u-mt-md">
+                                    <!-- Statistics will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
         
@@ -89,6 +141,57 @@
         <div class="total-display d-md-none" id="mobile-total">
             <div>Total: <span id="mobile-total-amount">RM 0</span></div>
             <button class="btn btn-light btn-sm mt-2" onclick="showCartSummary()">View Cart</button>
+        </div>
+    </div>
+
+    <!-- Package Management Modal -->
+    <div class="modal fade" id="packageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="packageModalTitle">Create New Package</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="packageForm">
+                        <div class="mb-3">
+                            <label for="package_id" class="form-label">Package ID</label>
+                            <input type="text" class="form-control" id="package_id" required>
+                            <div class="form-text">Unique identifier (e.g., water-supply-v2)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package_name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="package_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="package_description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package_price" class="form-label">Price (RM)</label>
+                            <input type="number" step="0.01" class="form-control" id="package_price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package_impact" class="form-label">Impact Description</label>
+                            <textarea class="form-control" id="package_impact" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package_icon" class="form-label">Icon (Emoji)</label>
+                            <input type="text" class="form-control" id="package_icon" placeholder="📦">
+                            <div class="form-text">Single emoji character</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="package_active" checked>
+                            <label class="form-check-label" for="package_active">Active</label>
+                        </div>
+                        <input type="hidden" id="package_edit_id">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="savePackage()">Save Package</button>
+                </div>
+            </div>
         </div>
     </div>
 

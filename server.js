@@ -788,6 +788,219 @@ app.get('/donationStats', async (req,res)=>{
     }
 });
 
+// --- Get all donations for admin ---
+app.get('/getAllDonations', async (req,res)=>{
+    try {
+        // Check if database is connected
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        const [donations] = await db.query(`
+            SELECT 
+                d.id,
+                d.transaction_id,
+                d.donor_name,
+                d.donor_email,
+                d.total_amount,
+                d.status,
+                d.created_at,
+                d.processed_at,
+                d.payment_method,
+                GROUP_CONCAT(
+                    JSON_OBJECT(
+                        'package_id', di.package_id,
+                        'name', di.package_name,
+                        'price', di.price,
+                        'quantity', di.quantity,
+                        'subtotal', di.subtotal,
+                        'impact', di.impact_description
+                    ) SEPARATOR '|||'
+                ) as items
+            FROM donations d
+            LEFT JOIN donation_items di ON d.id = di.donation_id
+            GROUP BY d.id
+            ORDER BY d.created_at DESC
+        `);
+
+        // Parse the items JSON and payment_method for each donation
+        const processedDonations = donations.map(donation => ({
+            ...donation,
+            items: donation.items ? donation.items.split('|||').map(item => JSON.parse(item)) : [],
+            payment_method: donation.payment_method ? JSON.parse(donation.payment_method) : null
+        }));
+
+        res.json({success: true, donations: processedDonations});
+
+    } catch(err) {
+        console.error('Get all donations error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Get all donation packages (including inactive) for admin ---
+app.get('/getAllDonationPackages', async (req,res)=>{
+    try {
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        const [packages] = await db.query('SELECT * FROM donation_packages ORDER BY created_at DESC');
+        res.json({success: true, packages: packages});
+
+    } catch(err) {
+        console.error('Get all donation packages error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Create new donation package (admin) ---
+app.post('/createDonationPackage', async (req,res)=>{
+    try {
+        const {package_id, name, description, price, impact_description, icon, adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!package_id || !name || !description || !price) {
+            return res.json({success: false, message: 'Missing required fields'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        // Check if package_id already exists
+        const [existing] = await db.query('SELECT * FROM donation_packages WHERE package_id = ?', [package_id]);
+        if (existing.length > 0) {
+            return res.json({success: false, message: 'Package ID already exists'});
+        }
+
+        await db.query(`
+            INSERT INTO donation_packages (package_id, name, description, price, impact_description, icon, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, TRUE)
+        `, [package_id, name, description, parseFloat(price), impact_description || '', icon || '📦']);
+
+        res.json({success: true, message: 'Donation package created successfully'});
+
+    } catch(err) {
+        console.error('Create donation package error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Update donation package (admin) ---
+app.put('/updateDonationPackage', async (req,res)=>{
+    try {
+        const {id, name, description, price, impact_description, icon, is_active, adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!id || !name || !description || !price) {
+            return res.json({success: false, message: 'Missing required fields'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        const [result] = await db.query(`
+            UPDATE donation_packages 
+            SET name = ?, description = ?, price = ?, impact_description = ?, icon = ?, is_active = ?
+            WHERE id = ?
+        `, [name, description, parseFloat(price), impact_description || '', icon || '📦', is_active !== false, id]);
+
+        if (result.affectedRows === 0) {
+            return res.json({success: false, message: 'Package not found'});
+        }
+
+        res.json({success: true, message: 'Donation package updated successfully'});
+
+    } catch(err) {
+        console.error('Update donation package error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Delete/Deactivate donation package (admin) ---
+app.delete('/deleteDonationPackage/:id', async (req,res)=>{
+    try {
+        const {id} = req.params;
+        const {adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        // Instead of deleting, we deactivate to preserve data integrity
+        const [result] = await db.query('UPDATE donation_packages SET is_active = FALSE WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.json({success: false, message: 'Package not found'});
+        }
+
+        res.json({success: true, message: 'Donation package deactivated successfully'});
+
+    } catch(err) {
+        console.error('Delete donation package error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Delete donation record (admin) ---
+app.delete('/deleteDonation/:id', async (req,res)=>{
+    try {
+        const {id} = req.params;
+        const {adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        // Start transaction to delete donation and its items
+        await db.beginTransaction();
+
+        try {
+            // Delete donation items first (foreign key constraint)
+            await db.query('DELETE FROM donation_items WHERE donation_id = ?', [id]);
+            
+            // Delete donation record
+            const [result] = await db.query('DELETE FROM donations WHERE id = ?', [id]);
+
+            if (result.affectedRows === 0) {
+                await db.rollback();
+                return res.json({success: false, message: 'Donation not found'});
+            }
+
+            await db.commit();
+            res.json({success: true, message: 'Donation record deleted successfully'});
+
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
+
+    } catch(err) {
+        console.error('Delete donation error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
 // --- Debug endpoint ---
 app.get('/debug', async (req,res)=>{
     try{
