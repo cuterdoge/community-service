@@ -329,16 +329,19 @@ async function loadMyDonations() {
         donationsContainer.innerHTML = `
             <div class="donation-stats">
                 <div class="stat-item">
-                    <span class="stat-number">${totalDonations}</span>
+                    
                     <span class="stat-label">Donations Made</span>
+                    <span class="stat-number">${totalDonations}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number">RM ${totalAmount.toFixed(2)}</span>
+                   
                     <span class="stat-label">Total Donated</span>
+                     <span class="stat-number">RM ${totalAmount.toFixed(2)}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number">${totalItems}</span>
+                    
                     <span class="stat-label">Items Donated</span>
+                    <span class="stat-number">${totalItems}</span>
                 </div>
             </div>
             
@@ -370,8 +373,8 @@ function renderDonationItem(donation) {
         <div class="donation-item">
             <div class="donation-info">
                 <div class="donation-title">Donation #${donation.transaction_id}</div>
-                <div class="donation-date">📅 ${donationDate}</div>
-                <div class="donation-impact">💫 ${impactSummary}</div>
+                <div class="donation-date"> ${donationDate}</div>
+                <div class="donation-impact"> ${impactSummary}</div>
             </div>
             <div class="donation-amount">RM ${parseFloat(donation.total_amount).toFixed(2)}</div>
             <div class="donation-actions">

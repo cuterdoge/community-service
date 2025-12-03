@@ -27,6 +27,23 @@
             padding-bottom: 50px;
         }
 
+        .container{
+            padding: 0%;
+            max-width: none !important;
+        }
+
+        .mt-5 {
+            margin-top: 0% !important;
+        }
+    
+        .justify-content-end{
+            padding-right: 30px;
+        }
+
+        .login-prompt{
+            padding-left: 160px !important;
+            padding-right: 160px !important;
+        }
 
         footer {
             margin-top: auto;
@@ -36,16 +53,29 @@
         }
 
         .btn-primary {
-            background-color: #a88db4;
-            border-color: #a88db4;
-            color: white;
+          color:  black;
+            border: 1px solid white;
+            background: white;
             transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
-            background-color: #480060;
-            border-color: #480060;
+             background-color: #764ba2;
             color: white;
+            border:  #764ba2;
+        }
+
+        .btn-outline-primary {
+          background-color: #764ba2;
+            border-color: #764ba2;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: white;
+            border: #764ba2;
+            color:#764ba2;
         }
 
         .btn-primary:focus {
@@ -63,11 +93,15 @@
 
         .auth-buttons {
             margin-top: 30px;
+            display: block;
         }
 
         .auth-buttons .btn {
             margin: 0 10px;
         }
+
+        
+        
 
         .volunteer-header {
             background-color: #f8f9fa;
@@ -240,7 +274,7 @@
                     <div class="col-auto">
                         <div class="header__user-info">
                             <span id="welcome-message" class="header__welcome me-3">Welcome, </span>
-                            <button onclick="logout()" class="button button--danger button--small">Logout</button>
+                        
                         </div>
                     </div>
                 </div>

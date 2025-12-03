@@ -1,13 +1,13 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    /* padding: 20px; */
     background-color: var(--bg-secondary, #f8fafc);
 }
 
 /* Form container styling */
 .form-container, .login-prompt {
-    max-width: 400px;
+    max-width: 1000px;
     margin: 50px auto;
     padding: 30px;
     background: white;

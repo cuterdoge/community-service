@@ -125,6 +125,12 @@
     width: 100%;
 }
 
+.btn-outline-danger{
+    background: red;
+    color: white;
+    border-color: transparent;
+}
+
 /* ==========================================================================
    Card Component
    ========================================================================== */
@@ -176,7 +182,7 @@
 .donation__hero {
     background: var(--primary-gradient);
     color: var(--text-white);
-    padding: 80px 0;
+    padding: 60px 0;
     text-align: center;
 }
 
