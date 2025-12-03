@@ -1,7 +1,7 @@
 /* Global Header Styles */
 .app-header {
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
+    background: #a88db4;
+    border-bottom: 1px solid #a88db4;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     position: fixed;
     top: 0;
@@ -66,8 +66,8 @@
 }
 
 .main-nav a:hover {
-    background-color: #f3f4f6;
-    color: #4f46e5;
+    background-color: #a88db4;
+    color: #e5e7eb;
 }
 
 .header-right {
@@ -174,25 +174,26 @@
 
 .auth-buttons .login-btn {
     color:  black;
-    border: 1px solid #afd9ec;
+    border: 1px solid white;
     background: white;
 }
 
 .auth-buttons .login-btn:hover {
-    background-color: #74cff3;
+    background-color: #764ba2;
     color: white;
+    border:  #764ba2;
 }
 
 .auth-buttons .register-btn {
-    background-color: #a1c2ce;
-    border-color: #afd9ec;
-    color: #000;
+    background-color: #764ba2;
+    border-color: #764ba2;
+    color: white;
 }
 
 .auth-buttons .register-btn:hover {
-     background-color: #74cff3;
-    border-color: #85d7e4;
-    color: #000;
+     background-color: white;
+    border: #764ba2;
+    color:#764ba2;
 }
 
 /* Mobile hamburger menu */

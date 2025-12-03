@@ -348,13 +348,13 @@
 }
 
 .slot--mine {
-    background: var(--primary-gradient);
+    /* background: var(--primary-gradient); */
     color: var(--text-white);
     border-color: var(--primary-color);
 }
 
 .slot--booked {
-    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    /* background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); */
     color: var(--text-white);
     cursor: not-allowed;
     border-color: #f87171;
@@ -368,7 +368,7 @@
 /* ==========================================================================
    Header Component
    ========================================================================== */
-.header {
+/* .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -401,7 +401,7 @@
     color: var(--text-primary);
     font-weight: 500;
     font-size: 14px;
-}
+} */
 
 /* ==========================================================================
    Utility Classes
@@ -488,7 +488,7 @@
    Legacy Compatibility (for gradual migration)
    ========================================================================== */
 .login-btn, .register-btn { 
-    background: var(--primary-gradient);
+    /* background: var(--primary-gradient); */
     color: var(--text-white);
     border-radius: var(--radius-xl);
     border: none;
@@ -500,7 +500,7 @@
 }
 
 .login-btn:hover, .register-btn:hover {
-    background: var(--primary-gradient-hover);
+    /* background: var(--primary-gradient-hover); */
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
 }
@@ -510,7 +510,7 @@
     align-items: center;
     justify-content: center;
     padding: 12px 24px;
-    background: var(--primary-gradient);
+    /* background: var(--primary-gradient); */
     color: var(--text-white);
     border-radius: var(--radius-xl);
     border: none;
@@ -522,7 +522,7 @@
 }
 
 .btn:hover {
-    background: var(--primary-gradient-hover);
+    /* background: var(--primary-gradient-hover); */
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
     color: var(--text-white);
