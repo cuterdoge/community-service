@@ -28,7 +28,7 @@ class HeaderManager {
             <div class="header-content">
                 <div class="header-left">
                    <a class="navbar-brand d-flex align-items-center" href="index.html">
-                  <img src="images/logo.png" alt="Joy Home Connect" height="40" class="me-2"> 
+                  <img src="images/logo1.png" alt="Joy Home Connect" height="40" class="me-2"> 
                 
                      </a>
                     <nav class="main-nav">
