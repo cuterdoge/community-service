@@ -57,11 +57,17 @@
             padding: 50px 0;
         }
 
+
+        .navbar-brand{
+            width: 150px;      /* control how big you want it */
+            height: auto;      /* keep aspect ratio */
+            object-fit: contain
+        }
+
         .btn-primary {
             background-color: #a88db4;
             border-color: #a88db4;
             color: white;
-            box-shadow: 0 2px 4px rgba(72, 0, 96, 0.2);
             transition: all 0.3s ease;
         }
 
@@ -69,20 +75,13 @@
             background-color: #480060;
             border-color: #480060;
             color: white;
-            box-shadow: 0 4px 8px rgba(72, 0, 96, 0.3);
-            transform: translateY(-1px);
         }
 
-        .btn-primary:active {
-            background-color: #380048;
-            border-color: #380048;
-            transform: translateY(0);
-        }
-
-        .navbar-brand{
-            width: 150px;      /* control how big you want it */
-            height: auto;      /* keep aspect ratio */
-            object-fit: contain
+        .btn-primary:focus {
+            background-color: #480060;
+            border-color: #480060;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(168, 141, 180, 0.5);
         }
     </style>
 </head>

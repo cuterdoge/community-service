@@ -52,19 +52,18 @@ button {
 }
 
 .login-btn, .register-btn {
-    background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+    background-color: #a88db4;
     color: white;
     width: 100%;
     margin: 10px 0;
     border-radius: var(--radius-xl, 25px);
     transition: all var(--transition-smooth, 0.3s ease);
-    box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
+    border: none;
 }
 
 .login-btn:hover, .register-btn:hover {
-    background: var(--primary-gradient-hover, linear-gradient(135deg, #5a6fd8 0%, #6b42a3 100%));
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover, 0 8px 30px rgba(102, 126, 234, 0.3));
+    background-color: #480060;
+    color: white;
 }
 
 .logout-btn {
@@ -161,9 +160,9 @@ button {
 }
 
 .slot.mine {
-    background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+    background-color: #a88db4;
     color: white;
-    border-color: var(--primary-color, #667eea);
+    border-color: #a88db4;
 }
 
 .slot.booked {
@@ -315,7 +314,7 @@ input[type="file"]:hover {
 }
 
 .change-pic-btn {
-    background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+    background-color: #a88db4;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -323,13 +322,11 @@ input[type="file"]:hover {
     cursor: pointer;
     font-size: 14px;
     transition: all var(--transition-smooth, 0.3s ease);
-    box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .change-pic-btn:hover {
-    background: var(--primary-gradient-hover, linear-gradient(135deg, #5a6fd8 0%, #6b42a3 100%));
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover, 0 8px 30px rgba(102, 126, 234, 0.3));
+    background-color: #480060;
+    color: white;
 }
 
 .field-note {
