@@ -195,10 +195,15 @@ function renderDonationPackages() {
         return;
     }
     
+    // Check if current user is admin
+    const currentUser = getCurrentUser();
+    const isAdmin = currentUser && currentUser.isAdmin;
+    
     container.innerHTML = donationPackages.map(pkg => `
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
             <div class="card card--donation">
                 <div class="card__header">
+                    ${!isAdmin ? `
                     <div class="donation__image">
                         <img src="images/${getPackageImageName(pkg.name)}" 
                              alt="${pkg.name}" 
@@ -206,6 +211,7 @@ function renderDonationPackages() {
                              style="display: block;">
                         <div class="donation__image--placeholder" style="display: none;">💝</div>
                     </div>
+                    ` : ''}
                     <h4 class="donation__title u-text-center">${pkg.name}</h4>
                 </div>
                 <div class="card__body">
@@ -797,7 +803,6 @@ function displayAdminPackages(packages) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-center mb-2">
-                            <span style="font-size: 1.5em; margin-right: 10px;">${pkg.icon || '📦'}</span>
                             <div>
                                 <h6 class="mb-1">${pkg.name}</h6>
                                 <p class="text-muted mb-1">${pkg.description}</p>
@@ -854,7 +859,6 @@ async function editPackage(packageId) {
                 document.getElementById('package_description').value = pkg.description;
                 document.getElementById('package_price').value = pkg.price;
                 document.getElementById('package_impact').value = pkg.impact_description || '';
-                document.getElementById('package_icon').value = pkg.icon || '';
                 document.getElementById('package_active').checked = pkg.is_active;
                 
                 new bootstrap.Modal(document.getElementById('packageModal')).show();
@@ -883,7 +887,6 @@ async function savePackage() {
         description: document.getElementById('package_description').value.trim(),
         price: parseFloat(document.getElementById('package_price').value),
         impact_description: document.getElementById('package_impact').value.trim(),
-        icon: document.getElementById('package_icon').value.trim(),
         is_active: document.getElementById('package_active').checked,
         adminEmail: currentUser.email
     };
@@ -960,7 +963,6 @@ async function togglePackageStatus(packageId, currentStatus) {
                         description: pkg.description,
                         price: pkg.price,
                         impact_description: pkg.impact_description,
-                        icon: pkg.icon,
                         is_active: true,
                         adminEmail: currentUser.email
                     };

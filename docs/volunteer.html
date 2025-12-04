@@ -262,10 +262,10 @@
             <!-- Main volunteer dashboard (hidden initially) -->
             <div id="volunteer-dashboard" style="display:none;">
                 <!-- Hero Section -->
-                <section class="donation__hero mb-5">
+                <section class="donation__hero mb-5" id="volunteer-hero">
                     <div class="container">
-                        <h1 class="display-4 fw-bold mb-4">Volunteer Schedule</h1>
-                        <p class="lead mb-0">Choose your volunteer time slots to help families in need</p>
+                        <h1 class="display-4 fw-bold mb-4" id="hero-title">Volunteer Schedule</h1>
+                        <p class="lead mb-0" id="hero-subtitle">Choose your volunteer time slots to help families in need</p>
                     </div>
                 </section>
 
@@ -358,6 +358,26 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             headerManager = new HeaderManager();
+            
+            // Check if user is admin and modify interface accordingly
+            const currentUser = getCurrentUser();
+            if (currentUser && currentUser.isAdmin) {
+                // Hide volunteer booking section for admin
+                const bookingSection = document.getElementById('volunteer-booking-section');
+                if (bookingSection) {
+                    bookingSection.style.display = 'none';
+                }
+                
+                // Update hero banner text for admin
+                const heroTitle = document.getElementById('hero-title');
+                const heroSubtitle = document.getElementById('hero-subtitle');
+                if (heroTitle) {
+                    heroTitle.textContent = 'Admin Volunteer Dashboard';
+                }
+                if (heroSubtitle) {
+                    heroSubtitle.textContent = 'Manage volunteer schedules and bookings';
+                }
+            }
             
             // Set default date to today
             const dateInput = document.getElementById('volunteerDate');
