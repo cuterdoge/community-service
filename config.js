@@ -30,7 +30,7 @@
 //         // Admin configuration
 //         admin: {
 //             email: process.env.ADMIN_EMAIL || 'admin@communityhub.com',
-//             password: process.env.ADMIN_PASSWORD || 'admin123'
+//             password: process.env.ADMIN_PASSWORD || 'password123'
 //         }
 //     }
 // };
@@ -68,7 +68,7 @@ const config = {
         // Admin configuration
         admin: {
             email: process.env.ADMIN_EMAIL || 'admin@communityhub.com',
-            password: process.env.ADMIN_PASSWORD || 'admin123'
+            password: process.env.ADMIN_PASSWORD || 'password123'
         }
     }
 };

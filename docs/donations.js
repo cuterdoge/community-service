@@ -199,19 +199,21 @@ function renderDonationPackages() {
     const currentUser = getCurrentUser();
     const isAdmin = currentUser && currentUser.isAdmin;
     
+    //   ${!isAdmin ? `
+    //                 <div class="donation__image">
+    //                     <img src="images/${getPackageImageName(pkg.name)}" 
+    //                          alt="${pkg.name}" 
+    //                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+    //                          style="display: block;">
+    //                     <div class="donation__image--placeholder" style="display: none;">💝</div>
+    //                 </div>
+    //                 ` : ''}
+
     container.innerHTML = donationPackages.map(pkg => `
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
             <div class="card card--donation">
                 <div class="card__header">
-                    ${!isAdmin ? `
-                    <div class="donation__image">
-                        <img src="images/${getPackageImageName(pkg.name)}" 
-                             alt="${pkg.name}" 
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                             style="display: block;">
-                        <div class="donation__image--placeholder" style="display: none;">💝</div>
-                    </div>
-                    ` : ''}
+                  
                     <h4 class="donation__title u-text-center">${pkg.name}</h4>
                 </div>
                 <div class="card__body">
@@ -609,6 +611,13 @@ function createAdminSectionIfMissing() {
         return;
     }
     
+    //   <div class="d-flex gap-2">
+    //                             <input type="date" id="filter-date-from" class="form-control" placeholder="From" style="width: 150px;">
+    //                             <input type="date" id="filter-date-to" class="form-control" placeholder="To" style="width: 150px;">
+    //                             <button onclick="filterDonations()" class="btn btn-outline-secondary">Filter</button>
+    //                             <button onclick="exportDonations()" class="btn btn-secondary">Export</button>
+    //                         </div>
+
     const adminSectionHTML = `
         <div id="admin-section" style="margin-top: 40px; display: block;">
             <div class="card">
@@ -625,7 +634,7 @@ function createAdminSectionIfMissing() {
 
                     <!-- Manage Packages Section -->
                     <div id="manage-packages-section" class="admin-content-section">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="flex--between d-flex justify-content-between align-items-center mb-3 flex--align-center ">
                             <h4>Donation Packages</h4>
                             <button onclick="showCreatePackageModal()" class="btn btn-success">Add New Package</button>
                         </div>
@@ -638,12 +647,7 @@ function createAdminSectionIfMissing() {
                     <div id="donation-history-section" class="admin-content-section" style="display:none;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4>All Donations</h4>
-                            <div class="d-flex gap-2">
-                                <input type="date" id="filter-date-from" class="form-control" placeholder="From" style="width: 150px;">
-                                <input type="date" id="filter-date-to" class="form-control" placeholder="To" style="width: 150px;">
-                                <button onclick="filterDonations()" class="btn btn-outline-secondary">Filter</button>
-                                <button onclick="exportDonations()" class="btn btn-secondary">Export</button>
-                            </div>
+                          
                         </div>
                         <div id="admin-donations-list" class="mt-3">
                             <div class="text-center">Loading donations...</div>

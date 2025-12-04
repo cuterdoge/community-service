@@ -450,6 +450,10 @@
     align-items: center;
 }
 
+.flex--align-center {
+    align-items: center;
+}
+
 .flex--between {
     justify-content: space-between;
     align-items: center;

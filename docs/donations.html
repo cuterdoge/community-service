@@ -90,6 +90,13 @@
         .container{
             max-width: 1200px;
         }
+
+        footer {
+            margin-top: auto;
+            width: 100%;
+            background-color: #a88db4;
+            border-color: #480060;
+        }
     </style>
 </head>
 <body>
@@ -141,7 +148,7 @@
 
                             <!-- Manage Packages Section -->
                             <div id="manage-packages-section" class="admin-content-section">
-                                <div class="flex flex--space-between flex--align-center u-mb-md">
+                                <div class="flex--between flex flex--space-between flex--align-center u-mb-md flex--align-center ">
                                     <h4>Donation Packages</h4>
                                     <button onclick="showCreatePackageModal()" class="button button--success">Add New Package</button>
                                 </div>
@@ -152,14 +159,14 @@
 
                             <!-- Donation History Section -->
                             <div id="donation-history-section" class="admin-content-section" style="display:none;">
-                                <div class="flex flex--space-between flex--align-center u-mb-md">
+                                <div class="flex flex--space-between flex--align-center u-mb-md flex--align-center  ">
                                     <h4>All Donations</h4>
-                                    <div class="flex flex--gap-sm">
+                                    <!-- <div class="flex flex--gap-sm">
                                         <input type="date" id="filter-date-from" class="form-control" placeholder="From">
                                         <input type="date" id="filter-date-to" class="form-control" placeholder="To">
                                         <button onclick="filterDonations()" class="button button--outline">Filter</button>
                                         <button onclick="exportDonations()" class="button button--secondary">Export</button>
-                                    </div>
+                                    </div> -->
                                 </div>
                                 <div id="admin-donations-list" class="u-mt-md">
                                     <!-- Donations will be loaded here -->
@@ -231,6 +238,21 @@
             </div>
         </div>
     </div>
+
+    <footer class="text-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Joy Home Connect</h5>
+                    <p>Providing care and love for children and elders in need.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Contact us: info@joyhome.com | +60 12-345 6789</p>
+                    <p>© 2025 Joy Home Connect. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="auth.js"></script>
