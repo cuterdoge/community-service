@@ -467,36 +467,252 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('Welcome back! Your cart has been restored.');
     }
     
-    // Check if user is admin and show admin section
-    checkAdminAccess();
+    // Check user auth and show appropriate interface (same as app.js)
+    checkUserAuth();
 });
 
-// Check if current user is admin
-function checkAdminAccess() {
-    const currentUser = authManager.getCurrentUser();
-    if (currentUser && currentUser.isAdmin) {
-        document.getElementById('admin-section').style.display = 'block';
+// Check if user is logged in and show appropriate interface (copied from app.js)
+function checkUserAuth() {
+    currentUser = getCurrentUser();
+    
+    if (currentUser) {
+        console.log('User found:', currentUser);
+        showDonationInterface();
+    } else {
+        console.log('No user found, showing regular donation interface');
+        showRegularDonationInterface();
+    }
+}
+
+function showDonationInterface() {
+    if (currentUser.isAdmin) {
+        console.log('Admin detected - showing admin interface');
+        // Hide regular donation sections
+        hideRegularDonationElements();
+        // Show admin section with explicit styling to override any CSS
+        const adminSection = document.getElementById('admin-section');
+        adminSection.style.display = 'block';
+        adminSection.style.visibility = 'visible';
+        adminSection.style.opacity = '1';
+        adminSection.style.height = 'auto';
+        adminSection.style.overflow = 'visible';
+        adminSection.style.position = 'relative';
+        adminSection.style.zIndex = '1000';
+        adminSection.style.backgroundColor = 'white';
+        adminSection.style.padding = '20px';
+        adminSection.style.margin = '20px 0';
+        adminSection.style.border = '2px solid red'; // Temporary border to see if it's there
+        console.log('Admin section styled. Computed style:', window.getComputedStyle(adminSection).display);
+        // Create admin hero
+        createAdminHero();
+        // Load admin data
+        loadAdminData();
+    } else {
+        console.log('Regular user - showing donation interface');
+        showRegularDonationInterface();
+        // Load regular donation packages
+        loadDonationPackages();
+    }
+}
+
+function hideRegularDonationElements() {
+    const heroSection = document.querySelector('.donation__hero');
+    const donationPackagesContainer = document.getElementById('donation-packages');
+    const cartSummary = document.getElementById('cart-summary');
+    const mobileTotal = document.getElementById('mobile-total');
+    
+    // Hide individual elements, not entire sections to avoid hiding admin section
+    if (heroSection) heroSection.style.display = 'none';
+    if (donationPackagesContainer) donationPackagesContainer.style.display = 'none';
+    if (cartSummary) cartSummary.style.display = 'none';
+    if (mobileTotal) mobileTotal.style.display = 'none';
+    
+    // Also hide any other donation-related elements but preserve admin section
+    const donationRows = document.querySelectorAll('.row:has(#donation-packages)');
+    donationRows.forEach(row => {
+        // Only hide if it doesn't contain the admin section
+        if (!row.querySelector('#admin-section')) {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Debug function removed as requested
+
+// Removed old complex checkAdminAccess function - using simple app.js approach instead
+
+// Create admin-specific hero section
+function createAdminHero() {
+    const container = document.querySelector('.container-fluid');
+    
+    // Check if admin hero already exists
+    if (document.getElementById('admin-hero')) {
+        return;
+    }
+    
+    const adminHero = document.createElement('section');
+    adminHero.id = 'admin-hero';
+    adminHero.className = 'py-5';
+    adminHero.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    adminHero.style.color = 'white';
+    adminHero.innerHTML = `
+        <div class="container">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-4">🛠️ Donation Management Dashboard</h1>
+                <p class="lead mb-0">Manage donation packages, track donations, and view analytics</p>
+            </div>
+        </div>
+    `;
+    
+    // Insert after the header (first element in container-fluid)
+    const firstChild = container.firstElementChild;
+    if (firstChild) {
+        container.insertBefore(adminHero, firstChild.nextSibling);
+    } else {
+        container.appendChild(adminHero);
+    }
+}
+
+// Show regular donation interface for non-admin users
+function showRegularDonationInterface() {
+    const heroSection = document.querySelector('.donation__hero');
+    const donationPackagesSection = document.getElementById('donation-packages').closest('section');
+    const cartSummary = document.getElementById('cart-summary');
+    const mobileTotal = document.getElementById('mobile-total');
+    const adminSection = document.getElementById('admin-section');
+    const adminHero = document.getElementById('admin-hero');
+    
+    // Show regular elements
+    if (heroSection) heroSection.style.display = 'block';
+    if (donationPackagesSection) donationPackagesSection.style.display = 'block';
+    if (cartSummary) cartSummary.style.display = 'block';
+    if (mobileTotal) mobileTotal.style.display = 'block';
+    
+    // Hide admin elements
+    if (adminSection) adminSection.style.display = 'none';
+    if (adminHero) adminHero.remove();
+}
+
+// Create admin section if it's missing from the DOM
+function createAdminSectionIfMissing() {
+    console.log('Creating missing admin section...');
+    
+    const container = document.querySelector('.container');
+    if (!container) {
+        console.error('No container found to add admin section');
+        return;
+    }
+    
+    const adminSectionHTML = `
+        <div id="admin-section" style="margin-top: 40px; display: block;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Donation Management</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Admin Navigation Tabs -->
+                    <div class="d-flex justify-content-center gap-3 mb-4">
+                        <button onclick="showManagePackages()" class="btn btn-primary" id="manage-packages-btn">Manage Packages</button>
+                        <button onclick="showDonationHistory()" class="btn btn-outline-primary" id="donation-history-btn">Donation History</button>
+                        <button onclick="showDonationStats()" class="btn btn-outline-primary" id="donation-stats-btn">Statistics</button>
+                    </div>
+
+                    <!-- Manage Packages Section -->
+                    <div id="manage-packages-section" class="admin-content-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>Donation Packages</h4>
+                            <button onclick="showCreatePackageModal()" class="btn btn-success">Add New Package</button>
+                        </div>
+                        <div id="admin-packages-list" class="mt-3">
+                            <div class="text-center">Loading packages...</div>
+                        </div>
+                    </div>
+
+                    <!-- Donation History Section -->
+                    <div id="donation-history-section" class="admin-content-section" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>All Donations</h4>
+                            <div class="d-flex gap-2">
+                                <input type="date" id="filter-date-from" class="form-control" placeholder="From" style="width: 150px;">
+                                <input type="date" id="filter-date-to" class="form-control" placeholder="To" style="width: 150px;">
+                                <button onclick="filterDonations()" class="btn btn-outline-secondary">Filter</button>
+                                <button onclick="exportDonations()" class="btn btn-secondary">Export</button>
+                            </div>
+                        </div>
+                        <div id="admin-donations-list" class="mt-3">
+                            <div class="text-center">Loading donations...</div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Section -->
+                    <div id="donation-stats-section" class="admin-content-section" style="display:none;">
+                        <h4 class="mb-3">Donation Statistics</h4>
+                        <div id="admin-stats-content" class="mt-3">
+                            <div class="text-center">Loading statistics...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add admin section to the end of the container
+    container.insertAdjacentHTML('beforeend', adminSectionHTML);
+    
+    // Now try to show it
+    const newAdminSection = document.getElementById('admin-section');
+    if (newAdminSection) {
+        console.log('Successfully created admin section');
+        newAdminSection.style.display = 'block !important';
+        newAdminSection.style.visibility = 'visible';
+        newAdminSection.style.opacity = '1';
+        createAdminHero();
         loadAdminData();
     }
 }
 
 // Load admin data
 function loadAdminData() {
-    showManagePackages(); // Default to packages view
+    console.log('=== Loading Admin Data ===');
+    try {
+        showManagePackages(); // Default to packages view
+        console.log('Called showManagePackages()');
+    } catch (error) {
+        console.error('Error in loadAdminData:', error);
+    }
 }
 
 // Admin tab navigation
 function showManagePackages() {
+    console.log('=== Show Manage Packages ===');
+    
     // Update button states
-    document.getElementById('manage-packages-btn').className = 'button button--primary';
-    document.getElementById('donation-history-btn').className = 'button button--outline';
-    document.getElementById('donation-stats-btn').className = 'button button--outline';
+    const manageBtn = document.getElementById('manage-packages-btn');
+    const historyBtn = document.getElementById('donation-history-btn');
+    const statsBtn = document.getElementById('donation-stats-btn');
+    
+    console.log('Manage packages button found:', !!manageBtn);
+    console.log('History button found:', !!historyBtn);
+    console.log('Stats button found:', !!statsBtn);
+    
+    if (manageBtn) manageBtn.className = 'btn btn-primary';
+    if (historyBtn) historyBtn.className = 'btn btn-outline-primary';
+    if (statsBtn) statsBtn.className = 'btn btn-outline-primary';
     
     // Show/hide sections
-    document.getElementById('manage-packages-section').style.display = 'block';
-    document.getElementById('donation-history-section').style.display = 'none';
-    document.getElementById('donation-stats-section').style.display = 'none';
+    const manageSection = document.getElementById('manage-packages-section');
+    const historySection = document.getElementById('donation-history-section');
+    const statsSection = document.getElementById('donation-stats-section');
     
+    console.log('Manage packages section found:', !!manageSection);
+    console.log('History section found:', !!historySection);
+    console.log('Stats section found:', !!statsSection);
+    
+    if (manageSection) manageSection.style.display = 'block';
+    if (historySection) historySection.style.display = 'none';
+    if (statsSection) statsSection.style.display = 'none';
+    
+    console.log('Calling loadAdminPackages()...');
     loadAdminPackages();
 }
 
@@ -530,37 +746,50 @@ function showDonationStats() {
 
 // Load all packages for admin management
 async function loadAdminPackages() {
+    console.log('=== Load Admin Packages ===');
     try {
+        console.log('Making fetch request to /getAllDonationPackages...');
         const response = await fetch('/getAllDonationPackages');
+        console.log('Response received:', response);
+        console.log('Response status:', response.status);
+        
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (data.success) {
+            console.log('Packages loaded successfully:', data.packages.length, 'packages');
             displayAdminPackages(data.packages);
         } else {
+            console.error('Failed to load packages:', data.message);
             showMessage('Failed to load packages: ' + data.message, 'error');
         }
     } catch (error) {
         console.error('Error loading admin packages:', error);
-        showMessage('Error loading packages', 'error');
+        showMessage('Error loading packages: ' + error.message, 'error');
     }
 }
 
 // Display packages in admin view
 function displayAdminPackages(packages) {
+    console.log('=== Display Admin Packages ===');
     const container = document.getElementById('admin-packages-list');
+    console.log('Container found:', !!container);
+    console.log('Number of packages:', packages.length);
     
     if (packages.length === 0) {
         container.innerHTML = '<p class="text-muted">No donation packages found.</p>';
         return;
     }
     
-    const packagesHTML = packages.map(pkg => `
-        <div class="card u-mb-md">
-            <div class="card__body">
-                <div class="flex flex--space-between flex--align-center">
+    const packagesHTML = packages.map(pkg => {
+        console.log('Rendering package:', pkg.name);
+        return `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
                     <div class="flex-grow-1">
-                        <div class="flex flex--align-center flex--gap-sm">
-                            <span style="font-size: 1.5em">${pkg.icon || '📦'}</span>
+                        <div class="d-flex align-items-center mb-2">
+                            <span style="font-size: 1.5em; margin-right: 10px;">${pkg.icon || '📦'}</span>
                             <div>
                                 <h6 class="mb-1">${pkg.name}</h6>
                                 <p class="text-muted mb-1">${pkg.description}</p>
@@ -569,22 +798,25 @@ function displayAdminPackages(packages) {
                         </div>
                         ${pkg.impact_description ? `<p class="text-success mt-2 mb-0"><small>${pkg.impact_description}</small></p>` : ''}
                     </div>
-                    <div class="flex flex--gap-sm flex--align-center">
+                    <div class="d-flex gap-2 align-items-center">
                         <span class="badge ${pkg.is_active ? 'bg-success' : 'bg-secondary'}">
                             ${pkg.is_active ? 'Active' : 'Inactive'}
                         </span>
-                        <button onclick="editPackage(${pkg.id})" class="button button--small button--outline">Edit</button>
+                        <button onclick="editPackage(${pkg.id})" class="btn btn-sm btn-outline-primary">Edit</button>
                         <button onclick="togglePackageStatus(${pkg.id}, ${pkg.is_active})" 
-                                class="button button--small ${pkg.is_active ? 'button--danger' : 'button--success'}">
+                                class="btn btn-sm ${pkg.is_active ? 'btn-danger' : 'btn-success'}">
                             ${pkg.is_active ? 'Deactivate' : 'Activate'}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
     
+    console.log('Setting innerHTML with packages HTML');
     container.innerHTML = packagesHTML;
+    console.log('Packages should now be visible');
 }
 
 // Show create package modal
@@ -628,7 +860,7 @@ async function editPackage(packageId) {
 
 // Save package (create or update)
 async function savePackage() {
-    const currentUser = authManager.getCurrentUser();
+    const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.isAdmin) {
         showMessage('Admin access required', 'error');
         return;
@@ -694,7 +926,7 @@ async function savePackage() {
 
 // Toggle package active status
 async function togglePackageStatus(packageId, currentStatus) {
-    const currentUser = authManager.getCurrentUser();
+    const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.isAdmin) {
         showMessage('Admin access required', 'error');
         return;
@@ -830,7 +1062,7 @@ function displayAllDonations(donations) {
 
 // Delete donation
 async function deleteDonation(donationId) {
-    const currentUser = authManager.getCurrentUser();
+    const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.isAdmin) {
         showMessage('Admin access required', 'error');
         return;
