@@ -717,10 +717,14 @@ function showManagePackages() {
 }
 
 function showDonationHistory() {
-    // Update button states
-    document.getElementById('manage-packages-btn').className = 'button button--outline';
-    document.getElementById('donation-history-btn').className = 'button button--primary';
-    document.getElementById('donation-stats-btn').className = 'button button--outline';
+    // Update button states - copy the working pattern from showManagePackages
+    const manageBtn = document.getElementById('manage-packages-btn');
+    const historyBtn = document.getElementById('donation-history-btn');
+    const statsBtn = document.getElementById('donation-stats-btn');
+    
+    if (manageBtn) manageBtn.className = 'btn btn-outline-primary';
+    if (historyBtn) historyBtn.className = 'btn btn-primary';
+    if (statsBtn) statsBtn.className = 'btn btn-outline-primary';
     
     // Show/hide sections
     document.getElementById('manage-packages-section').style.display = 'none';
@@ -731,10 +735,14 @@ function showDonationHistory() {
 }
 
 function showDonationStats() {
-    // Update button states
-    document.getElementById('manage-packages-btn').className = 'button button--outline';
-    document.getElementById('donation-history-btn').className = 'button button--outline';
-    document.getElementById('donation-stats-btn').className = 'button button--primary';
+    // Update button states - copy the working pattern from showManagePackages
+    const manageBtn = document.getElementById('manage-packages-btn');
+    const historyBtn = document.getElementById('donation-history-btn');
+    const statsBtn = document.getElementById('donation-stats-btn');
+    
+    if (manageBtn) manageBtn.className = 'btn btn-outline-primary';
+    if (historyBtn) historyBtn.className = 'btn btn-outline-primary';
+    if (statsBtn) statsBtn.className = 'btn btn-primary';
     
     // Show/hide sections
     document.getElementById('manage-packages-section').style.display = 'none';
@@ -802,7 +810,7 @@ function displayAdminPackages(packages) {
                         <span class="badge ${pkg.is_active ? 'bg-success' : 'bg-secondary'}">
                             ${pkg.is_active ? 'Active' : 'Inactive'}
                         </span>
-                        <button onclick="editPackage(${pkg.id})" class="btn btn-sm btn-outline-primary">Edit</button>
+                        <button onclick="editPackage(${pkg.id})" class="btn btn-sm btn-outline-primary" style="color: #0d6efd !important; border-color: #0d6efd !important; background-color: white !important;">Edit</button>
                         <button onclick="togglePackageStatus(${pkg.id}, ${pkg.is_active})" 
                                 class="btn btn-sm ${pkg.is_active ? 'btn-danger' : 'btn-success'}">
                             ${pkg.is_active ? 'Deactivate' : 'Activate'}
@@ -998,18 +1006,41 @@ async function togglePackageStatus(packageId, currentStatus) {
 
 // Load all donations for admin
 async function loadAllDonations() {
+    console.log('=== Load All Donations ===');
     try {
+        console.log('Making fetch request to /getAllDonations...');
         const response = await fetch('/getAllDonations');
-        const data = await response.json();
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const responseText = await response.text();
+        console.log('Raw response text:', responseText);
+        
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.error('Response was:', responseText);
+            showMessage('Error: Server returned invalid response', 'error');
+            return;
+        }
+        
+        console.log('Parsed response data:', data);
         
         if (data.success) {
+            console.log('Donations loaded successfully:', data.donations.length, 'donations');
             displayAllDonations(data.donations);
         } else {
+            console.error('Server returned error:', data.message);
             showMessage('Failed to load donations: ' + data.message, 'error');
         }
     } catch (error) {
         console.error('Error loading donations:', error);
-        showMessage('Error loading donations', 'error');
+        showMessage('Error loading donations: ' + error.message, 'error');
     }
 }
 

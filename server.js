@@ -806,35 +806,34 @@ app.get('/getAllDonations', async (req,res)=>{
                 d.status,
                 d.created_at,
                 d.processed_at,
-                d.payment_method,
-                GROUP_CONCAT(
-                    JSON_OBJECT(
-                        'package_id', di.package_id,
-                        'name', di.package_name,
-                        'price', di.price,
-                        'quantity', di.quantity,
-                        'subtotal', di.subtotal,
-                        'impact', di.impact_description
-                    ) SEPARATOR '|||'
-                ) as items
+                d.payment_method
             FROM donations d
-            LEFT JOIN donation_items di ON d.id = di.donation_id
-            GROUP BY d.id
             ORDER BY d.created_at DESC
         `);
 
-        // Parse the items JSON and payment_method for each donation
-        const processedDonations = donations.map(donation => ({
-            ...donation,
-            items: donation.items ? donation.items.split('|||').map(item => JSON.parse(item)) : [],
-            payment_method: donation.payment_method ? JSON.parse(donation.payment_method) : null
-        }));
+        // Safely process donations without complex JSON operations
+        const processedDonations = donations.map(donation => {
+            let parsedPaymentMethod = null;
+            try {
+                if (donation.payment_method && typeof donation.payment_method === 'string') {
+                    parsedPaymentMethod = JSON.parse(donation.payment_method);
+                }
+            } catch (e) {
+                console.log('Failed to parse payment_method for donation:', donation.id);
+            }
+
+            return {
+                ...donation,
+                payment_method: parsedPaymentMethod,
+                items: [] // We'll fetch items separately if needed
+            };
+        });
 
         res.json({success: true, donations: processedDonations});
 
     } catch(err) {
         console.error('Get all donations error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({success: false, message: 'Database error: ' + err.message});
     }
 });
 
