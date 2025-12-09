@@ -180,7 +180,7 @@
    Donation Component
    ========================================================================== */
 .donation__hero {
-    background: var(--primary-gradient);
+    background: linear-gradient(135deg, #a88db4 0%, #480060 100%);
     color: var(--text-white);
     padding: 60px 0;
     text-align: center;

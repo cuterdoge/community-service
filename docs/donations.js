@@ -561,12 +561,12 @@ function createAdminHero() {
     const adminHero = document.createElement('section');
     adminHero.id = 'admin-hero';
     adminHero.className = 'py-5';
-    adminHero.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    adminHero.style.background = 'linear-gradient(135deg, #a88db4 0%, #480060 100%)';
     adminHero.style.color = 'white';
     adminHero.innerHTML = `
         <div class="container">
             <div class="text-center">
-                <h1 class="display-4 fw-bold mb-4">🛠️ Donation Management Dashboard</h1>
+                <h1 class="display-4 fw-bold mb-4"> Donation Management Dashboard</h1>
                 <p class="lead mb-0">Manage donation packages, track donations, and view analytics</p>
             </div>
         </div>

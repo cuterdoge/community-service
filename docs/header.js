@@ -36,7 +36,7 @@ class HeaderManager {
                         <a class="nav-link" href="gallery.html">Gallery</a>
                         <a class="nav-link" href="events.html">Events</a>
                         <a class="nav-link" href="donations.html">Donations</a>
-                        <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Admin Dashboard' : 'Volunteer '}</a>
+                        <a href="volunteer.html">${this.currentUser && this.currentUser.isAdmin ? 'Volunteer' : 'Volunteer '}</a>
                         ${this.currentUser && !this.currentUser.isAdmin ? '<a href="profile.html">My Profile</a>' : ''}
                     </nav>
                 </div>
