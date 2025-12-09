@@ -4,6 +4,8 @@ class EventsManager {
         this.events = this.loadEvents();
         this.currentFilter = 'upcoming';
         this.currentUser = getCurrentUser();
+        this.currentEditingEventId = null;
+        this.editTempPosterData = null;
         this.init();
     }
 
@@ -53,8 +55,18 @@ class EventsManager {
             });
         }
 
+        // Edit form submission
+        const editEventForm = document.getElementById('editEventForm');
+        if (editEventForm) {
+            editEventForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveEditEvent();
+            });
+        }
+
         // Poster upload handling
         this.setupPosterUpload();
+        this.setupEditPosterUpload();
 
         // Modal click outside to close
         const modal = document.getElementById('eventModal');
@@ -62,6 +74,15 @@ class EventsManager {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     this.closeEventModal();
+                }
+            });
+        }
+
+        const editModal = document.getElementById('editEventModal');
+        if (editModal) {
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) {
+                    this.closeEditModal();
                 }
             });
         }
@@ -142,29 +163,197 @@ class EventsManager {
         uploadText.style.display = 'block';
         uploadPreview.style.display = 'none';
         fileInput.value = '';
+        
         this.tempPosterData = null;
     }
 
     checkAdminAccess() {
         const adminSection = document.getElementById('adminSection');
+        console.log('Checking admin access...');
+        console.log('Current user:', this.currentUser);
+        console.log('Is admin:', this.currentUser && this.currentUser.isAdmin);
+        
         if (this.currentUser && this.currentUser.isAdmin) {
             adminSection.style.display = 'block';
+            console.log('Admin section shown');
         } else {
             adminSection.style.display = 'none';
+            console.log('Admin section hidden');
         }
     }
 
-    toggleAdminPanel() {
-        const content = document.getElementById('adminPanelContent');
-        const toggleText = document.getElementById('adminToggleText');
-        
-        if (content.style.display === 'none') {
-            content.style.display = 'block';
-            toggleText.textContent = '▼ Hide Admin Panel';
-        } else {
-            content.style.display = 'none';
-            toggleText.textContent = '➤ Show Admin Panel';
+    setupEditPosterUpload() {
+        const editUploadArea = document.getElementById('editPosterUpload');
+        const editFileInput = document.getElementById('editPosterFile');
+
+        if (editUploadArea && editFileInput) {
+            // Click to upload
+            editUploadArea.addEventListener('click', () => {
+                editFileInput.click();
+            });
+
+            // File input change
+            editFileInput.addEventListener('change', (e) => {
+                this.handleEditFileUpload(e.target.files[0]);
+            });
+
+            // Drag and drop
+            editUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                editUploadArea.classList.add('dragover');
+            });
+
+            editUploadArea.addEventListener('dragleave', () => {
+                editUploadArea.classList.remove('dragover');
+            });
+
+            editUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                editUploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    this.handleEditFileUpload(file);
+                }
+            });
         }
+    }
+
+    handleEditFileUpload(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            alert('Please select a valid image file (PNG, JPG, etc.)');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            alert('File size too large. Please select an image under 5MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.showEditPosterPreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    showEditPosterPreview(imageData) {
+        const editUploadText = document.getElementById('editUploadText');
+        const editUploadPreview = document.getElementById('editUploadPreview');
+        const editPreviewImage = document.getElementById('editPreviewImage');
+
+        editUploadText.style.display = 'none';
+        editUploadPreview.style.display = 'block';
+        editPreviewImage.src = imageData;
+        
+        // Store the image data for later use
+        this.editTempPosterData = imageData;
+    }
+
+    clearEditPosterUpload() {
+        const editUploadText = document.getElementById('editUploadText');
+        const editUploadPreview = document.getElementById('editUploadPreview');
+        const editFileInput = document.getElementById('editPosterFile');
+
+        editUploadText.style.display = 'block';
+        editUploadPreview.style.display = 'none';
+        editFileInput.value = '';
+        
+        // Reset to original poster if editing
+        const currentEvent = this.events.find(e => e.id === this.currentEditingEventId);
+        this.editTempPosterData = currentEvent ? currentEvent.poster : null;
+        
+        if (this.editTempPosterData) {
+            this.showEditPosterPreview(this.editTempPosterData);
+        }
+    }
+
+    openEditModal(eventId) {
+        const event = this.events.find(e => e.id === eventId);
+        if (!event) {
+            console.error('Event not found with ID:', eventId);
+            alert('Event not found!');
+            return;
+        }
+
+        console.log('Opening edit modal for event:', event);
+        
+        // Set current editing event
+        this.currentEditingEventId = eventId;
+        this.editTempPosterData = event.poster;
+
+        // Populate form fields
+        document.getElementById('editEventTitle').value = event.title;
+        document.getElementById('editEventDate').value = event.date;
+        document.getElementById('editEventLocation').value = event.location;
+        document.getElementById('editEventDescription').value = event.description;
+
+        // Handle poster preview
+        if (event.poster) {
+            this.showEditPosterPreview(event.poster);
+        } else {
+            this.clearEditPosterUpload();
+        }
+
+        // Show modal
+        const modal = document.getElementById('editEventModal');
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeEditModal() {
+        const modal = document.getElementById('editEventModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        // Reset form and temp data
+        document.getElementById('editEventForm').reset();
+        this.currentEditingEventId = null;
+        this.editTempPosterData = null;
+        
+        // Reset upload area
+        const editUploadText = document.getElementById('editUploadText');
+        const editUploadPreview = document.getElementById('editUploadPreview');
+        editUploadText.style.display = 'block';
+        editUploadPreview.style.display = 'none';
+    }
+
+    saveEditEvent() {
+        const title = document.getElementById('editEventTitle').value.trim();
+        const date = document.getElementById('editEventDate').value;
+        const location = document.getElementById('editEventLocation').value.trim();
+        const description = document.getElementById('editEventDescription').value.trim();
+
+        if (!title || !date || !location || !description) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        // Find and update the event
+        const eventIndex = this.events.findIndex(e => e.id === this.currentEditingEventId);
+        if (eventIndex === -1) {
+            alert('Event not found!');
+            return;
+        }
+
+        const originalEvent = this.events[eventIndex];
+        
+        // Update event data
+        this.events[eventIndex] = {
+            ...originalEvent,
+            title: title,
+            description: description,
+            date: date,
+            location: location,
+            poster: this.editTempPosterData || originalEvent.poster,
+            lastModified: new Date().toISOString(),
+            modifiedBy: this.currentUser.id
+        };
+
+        this.saveEvents();
+        this.renderEvents();
+        this.closeEditModal();
+
+        alert('Event updated successfully!');
     }
 
     addEvent() {
@@ -197,10 +386,6 @@ class EventsManager {
         // Reset form
         document.getElementById('addEventForm').reset();
         this.clearPosterUpload();
-        
-        // Collapse admin panel
-        document.getElementById('adminPanelContent').style.display = 'none';
-        document.getElementById('adminToggleText').textContent = '➤ Show Admin Panel';
 
         alert('Event published successfully!');
     }
@@ -296,12 +481,20 @@ class EventsManager {
             ? `<img src="${event.poster}" alt="${event.title}" class="event-poster">`
             : `<div class="event-poster">📅<br>No Image</div>`;
 
-        const adminActions = (this.currentUser && this.currentUser.isAdmin) 
-            ? `<button onclick="eventsManager.deleteEvent('${event.id}')" class="btn-download-poster" style="background: #dc3545; color: white; border-color: #dc3545;">Delete</button>`
+        // Admin-only edit and delete buttons
+        const adminButtons = (this.currentUser && this.currentUser.isAdmin) 
+            ? `
+                <button onclick="eventsManager.openEditModal('${event.id}')" class="btn-download-poster" style="background: #fd7e14; color: white; border-color: #fd7e14;">
+                    ✏️ Edit
+                </button>
+                <button onclick="eventsManager.deleteEvent('${event.id}')" class="btn-download-poster" style="background: #dc3545; color: white; border-color: #dc3545;">
+                    🗑️ Delete
+                </button>
+            `
             : '';
 
         return `
-            <div class="event-card" onclick="eventsManager.openEventModal('${event.id}')">
+            <div class="event-card" onclick="eventsManager.openEventModal('${event.id}')" style="cursor: pointer;">
                 ${posterContent}
                 <div class="event-content">
                     <div class="event-date ${isUpcoming ? '' : 'past-event'}">${formattedDate}</div>
@@ -313,11 +506,11 @@ class EventsManager {
                     <p class="event-description">${truncatedDescription}</p>
                     <div class="event-actions" onclick="event.stopPropagation();">
                         <button onclick="eventsManager.openEventModal('${event.id}')" class="btn-view-details">
-                            View Details
+                            📖 View Details
                         </button>
-                        <div style="display: flex; gap: 10px;">
-                            ${event.poster ? `<button onclick="eventsManager.downloadPoster('${event.id}')" class="btn-download-poster">Download Poster</button>` : ''}
-                            ${adminActions}
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            ${event.poster ? `<button onclick="eventsManager.downloadPoster('${event.id}')" class="btn-download-poster">📥 Download Poster</button>` : ''}
+                            ${adminButtons}
                         </div>
                     </div>
                 </div>

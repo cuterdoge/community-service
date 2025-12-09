@@ -396,18 +396,13 @@
             </div>
         </section>
 
-        <!-- Admin Panel (Only visible to admins) -->
+        <!-- Admin Panel (Always visible to admins) -->
         <div class="container" id="adminSection" style="display: none;">
             <div class="admin-panel">
-                <!-- <button class="admin-panel-toggle" onclick="eventsManager.toggleAdminPanel()">
-                    <span id="adminToggleText">➤ Show Admin Panel</span>
-                </button> -->
-                
-                <!-- <div id="adminPanelContent" style="display: none;"> -->
-                    <h3>
-                        <span>⚙️</span>
-                        Event Management
-                    </h3>
+                <h3>
+                    <span>⚙️</span>
+                    Event Management
+                </h3>
                     
                     <form id="addEventForm">
                         <div class="row">
@@ -456,7 +451,6 @@
                             </button>
                         </div>
                     </form>
-                </div>
             </div>
         </div>
 
@@ -504,6 +498,69 @@
         </div>
     </div>
 
+    <!-- Edit Event Modal (Admin Only) -->
+    <div id="editEventModal" class="event-modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="eventsManager.closeEditModal()">&times;</span>
+            <div id="editModalContent">
+                <h2 style="color: #480060; margin-bottom: 25px; text-align: center;">
+                    <span>✏️</span> Edit Event
+                </h2>
+                
+                <form id="editEventForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editEventTitle">Event Title</label>
+                                <input type="text" class="form-control" id="editEventTitle" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editEventDate">Event Date</label>
+                                <input type="datetime-local" class="form-control" id="editEventDate" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEventLocation">Location</label>
+                        <input type="text" class="form-control" id="editEventLocation" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEventDescription">Description</label>
+                        <textarea class="form-control" id="editEventDescription" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Event Poster</label>
+                        <div class="upload-area" id="editPosterUpload">
+                            <div id="editUploadText">
+                                <p><strong>Click to upload or drag & drop</strong></p>
+                                <p>PNG, JPG up to 5MB</p>
+                            </div>
+                            <div id="editUploadPreview" style="display: none;">
+                                <img id="editPreviewImage" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                                <p><button type="button" onclick="eventsManager.clearEditPosterUpload()" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 10px;">Remove</button></p>
+                            </div>
+                        </div>
+                        <input type="file" id="editPosterFile" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="text-center" style="margin-top: 25px;">
+                        <button type="button" onclick="eventsManager.closeEditModal()" class="btn" style="background: #6c757d; color: white; margin-right: 15px; padding: 12px 24px;">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn" style="background: #fd7e14; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600;">
+                            💾 Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="text-light py-4">
         <div class="container">
@@ -529,12 +586,31 @@
     <script>
         // Initialize the page when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing events page...');
+            
             // Initialize header
             headerManager = new HeaderManager();
+            console.log('Header manager initialized');
             
             // Initialize events manager
-            window.eventsManager = new EventsManager();
+            try {
+                window.eventsManager = new EventsManager();
+                console.log('Events manager initialized successfully');
+                console.log('Events manager instance:', window.eventsManager);
+            } catch (error) {
+                console.error('Error initializing events manager:', error);
+            }
         });
+
+        // Add a global function to test edit functionality
+        function testEdit(eventId) {
+            if (window.eventsManager) {
+                console.log('Testing edit function...');
+                window.eventsManager.editEvent(eventId);
+            } else {
+                console.error('Events manager not found!');
+            }
+        }
     </script>
 </body>
 </html>
