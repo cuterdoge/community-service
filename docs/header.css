@@ -349,11 +349,59 @@
     }
     
     .user-info {
-        display: none;
+        display: none !important;
     }
     
     .user-profile {
-        gap: 10px;
+        gap: 3px;
+        max-width: 120px;
+        overflow: hidden;
+        flex-shrink: 1;
+    }
+    
+    .user-profile .profile-pic-container {
+        width: 25px !important;
+        height: 25px !important;
+        flex-shrink: 0;
+    }
+    
+    .user-name {
+        font-size: 11px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70px;
+        line-height: 1.1;
+    }
+    
+    /* Hide user email on mobile completely */
+    .user-email {
+        display: none !important;
+    }
+    
+    /* Make profile/logout buttons much smaller */
+    .user-actions {
+        gap: 2px !important;
+        flex-shrink: 0;
+    }
+    
+    .user-actions .profile-btn,
+    .user-actions .logout-btn {
+        padding: 3px 4px !important;
+        font-size: 9px !important;
+        min-width: 35px !important;
+        border-radius: 3px !important;
+    }
+    
+    /* Ensure header content fits */
+    .header-right {
+        max-width: 45% !important;
+        overflow: hidden;
+    }
+    
+    .header-content {
+        justify-content: space-between;
+        align-items: center;
     }
 }
 

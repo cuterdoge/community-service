@@ -827,13 +827,19 @@ function displayAdminPackages(packages) {
     console.log('Packages should now be visible');
 }
 
-// Show create package modal
-function showCreatePackageModal() {
-    document.getElementById('packageModalTitle').textContent = 'Create New Package';
+// Show create package form
+function showCreatePackageForm() {
+    document.getElementById('packageFormTitle').textContent = 'Create New Package';
     document.getElementById('packageForm').reset();
     document.getElementById('package_edit_id').value = '';
     document.getElementById('package_id').readOnly = false;
-    new bootstrap.Modal(document.getElementById('packageModal')).show();
+    document.getElementById('package-form-section').style.display = 'block';
+    document.getElementById('package-form-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Hide package form
+function hidePackageForm() {
+    document.getElementById('package-form-section').style.display = 'none';
 }
 
 // Edit package
@@ -846,7 +852,7 @@ async function editPackage(packageId) {
             const pkg = data.packages.find(p => p.id === packageId);
             if (pkg) {
                 // Populate form
-                document.getElementById('packageModalTitle').textContent = 'Edit Package';
+                document.getElementById('packageFormTitle').textContent = 'Edit Package';
                 document.getElementById('package_edit_id').value = pkg.id;
                 document.getElementById('package_id').value = pkg.package_id;
                 document.getElementById('package_id').readOnly = true;
@@ -856,7 +862,8 @@ async function editPackage(packageId) {
                 document.getElementById('package_impact').value = pkg.impact_description || '';
                 document.getElementById('package_active').checked = pkg.is_active;
                 
-                new bootstrap.Modal(document.getElementById('packageModal')).show();
+                document.getElementById('package-form-section').style.display = 'block';
+                document.getElementById('package-form-section').scrollIntoView({ behavior: 'smooth' });
             }
         }
     } catch (error) {
@@ -918,7 +925,7 @@ async function savePackage() {
         
         if (data.success) {
             showMessage(data.message, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('packageModal')).hide();
+            hidePackageForm();
             loadAdminPackages();
             loadDonationPackages(); // Refresh public view too
         } else {
