@@ -272,6 +272,116 @@
                 color: #28a745 !important;
                 font-size: 14px !important;
             }
+            
+            /* Fix d-flex containers and reduce white space */
+            .container {
+                padding-left: 5px !important;
+                padding-right: 5px !important;
+            }
+            
+            .admin-content-section {
+                margin-bottom: 15px !important;
+                padding: 10px 5px !important;
+            }
+            
+            .card {
+                margin-bottom: 10px !important;
+                border-radius: 8px !important;
+            }
+            
+            .card__header {
+                padding: 12px 10px !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .card__body {
+                padding: 12px 10px !important;
+            }
+            
+            /* Fix d-flex containers overflow on mobile */
+            .d-flex {
+                flex-wrap: wrap !important;
+                overflow: visible !important;
+                margin: 0 !important;
+            }
+            
+            .d-flex.gap-2 {
+                gap: 8px !important;
+                margin: 5px 0 !important;
+            }
+            
+            /* Admin section flex containers */
+            .admin-content-section .d-flex {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 8px !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            /* Button containers in admin - fix cut off */
+            .d-flex.gap-2 .button,
+            .d-flex.gap-2 .btn {
+                width: calc(100% - 4px) !important;
+                margin: 2px !important;
+                padding: 10px 8px !important;
+                font-size: 13px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                border-radius: 6px !important;
+                box-sizing: border-box !important;
+                min-height: 40px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            /* Specific admin navigation buttons */
+            .admin-content-section > .flex,
+            .admin-content-section > .d-flex {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 0 !important;
+                margin: 8px 0 !important;
+            }
+            
+            /* Package form buttons - reduce spacing */
+            #package-form-section {
+                margin: 15px 0 !important;
+            }
+            
+            #package-form-section .d-flex {
+                flex-direction: column !important;
+                gap: 8px !important;
+                align-items: stretch !important;
+                margin-top: 15px !important;
+                padding-top: 10px !important;
+                border-top: 1px solid #e9ecef !important;
+            }
+            
+            #package-form-section .d-flex .button {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 12px 15px !important;
+                min-height: 44px !important;
+            }
+            
+            /* Reduce form spacing */
+            .mb-3 {
+                margin-bottom: 15px !important;
+            }
+            
+            .row {
+                margin: 0 !important;
+            }
+            
+            .col-md-6 {
+                padding-left: 5px !important;
+                padding-right: 5px !important;
+            }
         }
 
         .container{
