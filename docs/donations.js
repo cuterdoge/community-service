@@ -758,7 +758,8 @@ async function loadAdminPackages() {
     console.log('=== Load Admin Packages ===');
     try {
         console.log('Making fetch request to /getAllDonationPackages...');
-        const response = await fetch('/getAllDonationPackages');
+        // Add cache busting to ensure we get fresh data
+        const response = await fetch('/getAllDonationPackages?' + new Date().getTime());
         console.log('Response received:', response);
         console.log('Response status:', response.status);
         
@@ -767,6 +768,7 @@ async function loadAdminPackages() {
         
         if (data.success) {
             console.log('Packages loaded successfully:', data.packages.length, 'packages');
+            console.log('Package IDs:', data.packages.map(p => p.id));
             displayAdminPackages(data.packages);
         } else {
             console.error('Failed to load packages:', data.message);
@@ -807,13 +809,9 @@ function displayAdminPackages(packages) {
                         ${pkg.impact_description ? `<p class="text-success mt-2 mb-0"><small>${pkg.impact_description}</small></p>` : ''}
                     </div>
                     <div class="d-flex gap-2 align-items-center">
-                        <span class="badge ${pkg.is_active ? 'bg-success' : 'bg-secondary'}">
-                            ${pkg.is_active ? 'Active' : 'Inactive'}
-                        </span>
                         <button onclick="editPackage(${pkg.id})" class="btn btn-sm btn-outline-primary" style="color: #0d6efd !important; border-color: #0d6efd !important; background-color: white !important;">Edit</button>
-                        <button onclick="togglePackageStatus(${pkg.id}, ${pkg.is_active})" 
-                                class="btn btn-sm ${pkg.is_active ? 'btn-danger' : 'btn-success'}">
-                            ${pkg.is_active ? 'Deactivate' : 'Activate'}
+                        <button onclick="deletePackage(${pkg.id})" class="btn btn-sm btn-danger">
+                            Delete
                         </button>
                     </div>
                 </div>
@@ -860,7 +858,6 @@ async function editPackage(packageId) {
                 document.getElementById('package_description').value = pkg.description;
                 document.getElementById('package_price').value = pkg.price;
                 document.getElementById('package_impact').value = pkg.impact_description || '';
-                document.getElementById('package_active').checked = pkg.is_active;
                 
                 document.getElementById('package-form-section').style.display = 'block';
                 document.getElementById('package-form-section').scrollIntoView({ behavior: 'smooth' });
@@ -889,7 +886,7 @@ async function savePackage() {
         description: document.getElementById('package_description').value.trim(),
         price: parseFloat(document.getElementById('package_price').value),
         impact_description: document.getElementById('package_impact').value.trim(),
-        is_active: document.getElementById('package_active').checked,
+        is_active: true, // Always active since we removed the toggle
         adminEmail: currentUser.email
     };
     
@@ -926,8 +923,12 @@ async function savePackage() {
         if (data.success) {
             showMessage(data.message, 'success');
             hidePackageForm();
-            loadAdminPackages();
-            loadDonationPackages(); // Refresh public view too
+            // Refresh the admin list immediately after successful save
+            setTimeout(() => {
+                console.log('Refreshing admin packages after save/create...');
+                loadAdminPackages();
+                loadDonationPackages(); // Refresh public view too
+            }, 300);
         } else {
             showMessage(data.message, 'error');
         }
@@ -937,74 +938,45 @@ async function savePackage() {
     }
 }
 
-// Toggle package active status
-async function togglePackageStatus(packageId, currentStatus) {
+// Delete package permanently
+async function deletePackage(packageId) {
     const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.isAdmin) {
         showMessage('Admin access required', 'error');
         return;
     }
     
-    const action = currentStatus ? 'deactivate' : 'activate';
-    if (!confirm(`Are you sure you want to ${action} this package?`)) {
+    if (!confirm('Are you sure you want to delete this donation package? This action cannot be undone.')) {
         return;
     }
     
     try {
-        if (!currentStatus) {
-            // Reactivate package - we need to get the package details first
-            const response = await fetch('/getAllDonationPackages');
-            const data = await response.json();
-            
-            if (data.success) {
-                const pkg = data.packages.find(p => p.id === packageId);
-                if (pkg) {
-                    const updateData = {
-                        id: packageId,
-                        name: pkg.name,
-                        description: pkg.description,
-                        price: pkg.price,
-                        impact_description: pkg.impact_description,
-                        is_active: true,
-                        adminEmail: currentUser.email
-                    };
-                    
-                    const updateResponse = await fetch('/updateDonationPackage', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                    });
-                    
-                    const updateResult = await updateResponse.json();
-                    if (updateResult.success) {
-                        showMessage('Package activated successfully', 'success');
-                        loadAdminPackages();
-                        loadDonationPackages();
-                    } else {
-                        showMessage(updateResult.message, 'error');
-                    }
-                }
-            }
-        } else {
-            // Deactivate package
-            const response = await fetch(`/deleteDonationPackage/${packageId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminEmail: currentUser.email })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                showMessage('Package deactivated successfully', 'success');
+        console.log('Attempting to delete package ID:', packageId);
+        const response = await fetch(`/deleteDonationPackage/${packageId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminEmail: currentUser.email })
+        });
+        
+        console.log('Delete response status:', response.status);
+        const data = await response.json();
+        console.log('Delete response data:', data);
+        
+        if (data.success) {
+            showMessage('Package deleted successfully', 'success');
+            // Force immediate refresh with cache busting
+            setTimeout(() => {
+                console.log('Refreshing admin packages after deletion...');
                 loadAdminPackages();
-                loadDonationPackages();
-            } else {
-                showMessage(data.message, 'error');
-            }
+                loadDonationPackages(); // Refresh public view too
+            }, 1000); // Increased delay to 1 second
+        } else {
+            showMessage('Delete failed: ' + data.message, 'error');
+            console.error('Server delete error:', data.message);
         }
     } catch (error) {
-        console.error('Error toggling package status:', error);
-        showMessage('Error updating package status', 'error');
+        console.error('Error deleting package:', error);
+        showMessage('Error deleting package: ' + error.message, 'error');
     }
 }
 
