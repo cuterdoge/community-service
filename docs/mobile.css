@@ -111,6 +111,222 @@
         height: 35px;
     }
     
+    /* Profile page specific mobile styles */
+    .profile-pic-section {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .current-pic-container {
+        margin-bottom: 15px;
+    }
+    
+    .large-profile-pic {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .change-pic-btn {
+        background-color: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        min-height: 44px;
+    }
+    
+    /* Form container mobile improvements */
+    .form-container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* Login required section */
+    .auth-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .login-btn, .register-btn {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        text-align: center;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        min-height: 44px;
+        box-sizing: border-box;
+    }
+    
+    .login-btn {
+        background-color: #667eea;
+        color: white;
+        border: 2px solid #667eea;
+    }
+    
+    .register-btn {
+        background-color: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+    
+    /* Login and Register Form Mobile Styles */
+    .card--form {
+        width: 100% !important;
+        max-width: 400px;
+        margin: 20px auto;
+        border-radius: 15px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border: none;
+    }
+    
+    .form__group {
+        margin-bottom: 20px;
+    }
+    
+    .form__label {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: #333;
+    }
+    
+    .form__input {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        padding: 15px 20px !important;
+        border-radius: 10px !important;
+        border: 2px solid #e9ecef !important;
+        width: 100% !important;
+        box-sizing: border-box;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .form__input:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        outline: none !important;
+        background-color: white;
+    }
+    
+    .form__input::placeholder {
+        color: #999;
+        opacity: 1;
+    }
+    
+    .button--block {
+        width: 100% !important;
+        padding: 18px 20px !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        margin: 20px 0 !important;
+        min-height: 50px !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        color: white !important;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .button--block:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .form__error {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+        display: block;
+        font-weight: 500;
+    }
+    
+    .checkbox-container {
+        display: flex !important;
+        align-items: center;
+        font-size: 16px;
+        margin: 15px 0;
+        cursor: pointer;
+    }
+    
+    .checkbox-container input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 12px;
+        cursor: pointer;
+    }
+    
+    .form__footer {
+        text-align: center;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .form__footer p {
+        margin: 10px 0;
+        font-size: 16px;
+    }
+    
+    .form__footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .form__footer a:hover {
+        color: #5a6fd8;
+        text-decoration: underline;
+    }
+    
+    /* Profile picture upload specific styles */
+    .file-info {
+        color: #6c757d;
+        font-size: 14px;
+        margin-top: 5px;
+        display: block;
+    }
+    
+    .profile-preview {
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    .profile-preview img {
+        max-width: 120px;
+        max-height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #667eea;
+    }
+    
+    /* Form headers */
+    .card__header h1 {
+        font-size: 24px !important;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .card__body {
+        padding: 30px 25px !important;
+    }
+    
+    .card__header {
+        padding: 25px 25px 10px 25px !important;
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        border-radius: 15px 15px 0 0;
+    }
+    
     /* Modal adjustments */
     .modal-dialog {
         margin: 10px;

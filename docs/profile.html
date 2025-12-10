@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Profile - Community Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Joy Home Connect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="bem-styles.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="mobile.css">
     <style>
         .volunteer-slots-section, .donations-section {
             margin-top: 30px;
@@ -186,37 +189,277 @@
             font-size: 14px;
             opacity: 0.9;
         }
-     
+        /* Mobile Responsive Styles */
         @media (max-width: 768px) {
-            .booking-item, .donation-item {
+            /* Form container adjustments */
+            .form-container {
+                padding: 15px !important;
+                margin: 10px !important;
+            }
+            
+            /* Profile picture section */
+            .profile-pic-section {
+                text-align: center;
+                margin-bottom: 25px;
+            }
+            
+            .large-profile-pic {
+                width: 120px !important;
+                height: 120px !important;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 4px solid #667eea;
+                margin-bottom: 15px;
+            }
+            
+            .change-pic-btn {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+            
+            /* Form improvements */
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group label {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: block;
+            }
+            
+            .form-group input {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+                padding: 12px 15px;
+                border-radius: 8px;
+                border: 2px solid #e9ecef;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .form-group input:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                outline: none;
+            }
+            
+            /* Button improvements */
+            .update-btn, .cancel-btn {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+                font-weight: 600;
+                border-radius: 8px;
+                margin: 10px 0;
+                min-height: 44px; /* Touch-friendly size */
+            }
+            
+            .update-btn {
+                background-color: #667eea;
+                border: none;
+                color: white;
+            }
+            
+            .cancel-btn {
+                background-color: #6c757d;
+                border: none;
+                color: white;
+            }
+            
+            /* Section spacing */
+            .volunteer-slots-section, .donations-section {
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .volunteer-slots-section h2, .donations-section h2 {
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            
+            /* Booking items mobile layout */
+            .booking-item {
                 flex-direction: column;
+                text-align: left;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            
+            .booking-date {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+            
+            .booking-time {
+                font-size: 14px;
+                color: #666;
+                margin-bottom: 10px;
+                text-align: left;
+            }
+            
+            .booking-actions {
+                text-align: left;
+            }
+            
+            .cancel-btn-small {
+                padding: 10px 20px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+            
+            /* Donation items mobile layout */
+            .donation-item {
+                flex-direction: column;
+                text-align: left;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            
+            .donation-info {
+                margin-bottom: 10px;
+            }
+            
+            .donation-title {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+            
+            .donation-date, .donation-impact {
+                font-size: 14px;
+                color: #666;
+                margin-bottom: 3px;
+            }
+            
+            .donation-amount {
+                font-size: 18px;
+                font-weight: bold;
+                color: #667eea;
+                margin: 10px 0;
+                text-align: left;
+            }
+            
+            .donation-actions {
+                text-align: left;
+            }
+            
+            .receipt-btn {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 6px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+            
+            /* Donation stats mobile layout */
+            .donation-stats {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .stat-item {
+                flex: 1;
                 text-align: center;
             }
             
-            .booking-date, .booking-time, .booking-actions,
-            .donation-info, .donation-amount, .donation-actions {
-                margin: 10px 0;
+            .stat-number {
+                font-size: 18px;
+                font-weight: bold;
+                display: block;
+            }
+            
+            .stat-label {
+                font-size: 12px;
+                opacity: 0.9;
+            }
+            
+            /* Error messages */
+            .error-message {
+                color: #dc3545;
+                font-size: 14px;
+                margin-top: 5px;
+                display: block;
+            }
+            
+            .field-note {
+                color: #6c757d;
+                font-size: 12px;
+                margin-top: 3px;
+                display: block;
+            }
+            
+            /* No donations section */
+            .no-donations {
+                text-align: center;
+                padding: 30px 15px;
+            }
+            
+            .donate-now-btn {
+                display: block;
+                width: 100%;
+                max-width: 300px;
+                margin: 15px auto 0;
+                padding: 15px 20px;
+                font-size: 16px;
+                text-align: center;
+                box-sizing: border-box;
+            }
+        }
+        
+        /* Extra small mobile devices */
+        @media (max-width: 480px) {
+            .form-container {
+                margin: 5px !important;
+                padding: 10px !important;
+            }
+            
+            .large-profile-pic {
+                width: 100px !important;
+                height: 100px !important;
             }
             
             .donation-stats {
                 flex-direction: column;
                 gap: 15px;
             }
+            
+            .stat-item {
+                padding: 10px 0;
+            }
+            
+            h1 {
+                font-size: 24px !important;
+            }
+            
+            .volunteer-slots-section h2, .donations-section h2 {
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="login-required" class="form-container">
-        <h1>Please Login</h1>
-        <p>You must be logged in to view your profile.</p>
-        <div class="auth-buttons">
-            <a href="login.html" class="login-btn">Login</a>
-            <a href="register.html" class="register-btn">Register</a>
+    <div class="container-fluid p-0">
+        <!-- Header will be injected here -->
+        
+        <div id="login-required" class="form-container" style="margin-top: 80px;">
+            <h1>Please Login</h1>
+            <p>You must be logged in to view your profile.</p>
+            <div class="auth-buttons">
+                <a href="login.html" class="login-btn">Login</a>
+                <a href="register.html" class="register-btn">Register</a>
+            </div>
         </div>
-    </div>
 
-    <div id="profile-page" style="display:none;">
-        <div class="form-container">
+        <div id="profile-page" style="display:none; margin-top: 80px;">
+            <div class="container">
+                <div class="form-container">
             <h1>My Profile</h1>
             
             <!-- Profile Picture Section -->
@@ -281,6 +524,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="auth.js"></script>
     <script src="header.js"></script>
     <script src="profile.js"></script>

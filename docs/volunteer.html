@@ -189,11 +189,13 @@
             border-left: 4px solid #007bff;
         }
 
-        /* Hide header auth buttons on volunteer page */
-        header .auth-buttons,
-        .header .auth-buttons,
-        nav .auth-buttons {
-            display: none !important;
+        /* Hide header auth buttons on volunteer page for mobile only */
+        @media (max-width: 768px) {
+            header .auth-buttons,
+            .header .auth-buttons,
+            nav .auth-buttons {
+                display: none !important;
+            }
         }
 
         /* Mobile responsiveness */
@@ -232,9 +234,17 @@
                 margin-top: 15px;
             }
             
-            .auth-buttons .btn {
+            /* Mobile login prompt buttons */
+            .login-prompt .auth-buttons {
+                display: flex !important;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .login-prompt .auth-buttons .btn {
                 margin: 5px 0;
                 width: 100%;
+                min-height: 50px;
             }
             
             .admin-section .btn-group {

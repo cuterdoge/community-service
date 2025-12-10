@@ -345,7 +345,7 @@
     }
     
     .auth-buttons {
-        display: none;
+        display: none !important;
     }
     
     .user-info {
