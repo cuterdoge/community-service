@@ -322,7 +322,18 @@
     }
     
     .header-left {
-        gap: 15px;
+        gap: 10px;
+    }
+    
+    /* Mobile logo sizing - make it smaller to fit */
+    .navbar-brand {
+        width: 100px !important;
+    }
+    
+    .navbar-brand img {
+        height: 30px !important;
+        width: auto;
+        max-width: 100px;
     }
     
     .main-nav {
@@ -343,5 +354,27 @@
     
     .user-profile {
         gap: 10px;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0 10px;
+    }
+    
+    .header-left {
+        gap: 5px;
+    }
+    
+    /* Even smaller logo for very small screens */
+    .navbar-brand {
+        width: 80px !important;
+    }
+    
+    .navbar-brand img {
+        height: 25px !important;
+        width: auto;
+        max-width: 80px;
     }
 }

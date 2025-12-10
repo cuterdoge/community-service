@@ -288,8 +288,6 @@ function updateCartDisplay() {
     const cartSummary = document.getElementById('cart-summary');
     const cartItems = document.getElementById('cart-items');
     const cartTotal = document.getElementById('cart-total');
-    const mobileTotal = document.getElementById('mobile-total');
-    const mobileTotalAmount = document.getElementById('mobile-total-amount');
     
     const cartEntries = Object.entries(donationCart);
     const hasItems = cartEntries.length > 0;
@@ -297,7 +295,6 @@ function updateCartDisplay() {
     if (hasItems) {
         // Show cart summary
         cartSummary.style.display = 'block';
-        mobileTotal.style.display = 'block';
         
         // Render cart items
         cartItems.innerHTML = cartEntries.map(([packageId, quantity]) => {
@@ -332,11 +329,9 @@ function updateCartDisplay() {
         }, 0);
         
         cartTotal.textContent = `Total: RM ${total}`;
-        mobileTotalAmount.textContent = `RM ${total}`;
         
     } else {
         cartSummary.style.display = 'none';
-        mobileTotal.style.display = 'none';
     }
 }
 
@@ -527,13 +522,11 @@ function hideRegularDonationElements() {
     const heroSection = document.querySelector('.donation__hero');
     const donationPackagesContainer = document.getElementById('donation-packages');
     const cartSummary = document.getElementById('cart-summary');
-    const mobileTotal = document.getElementById('mobile-total');
     
     // Hide individual elements, not entire sections to avoid hiding admin section
     if (heroSection) heroSection.style.display = 'none';
     if (donationPackagesContainer) donationPackagesContainer.style.display = 'none';
     if (cartSummary) cartSummary.style.display = 'none';
-    if (mobileTotal) mobileTotal.style.display = 'none';
     
     // Also hide any other donation-related elements but preserve admin section
     const donationRows = document.querySelectorAll('.row:has(#donation-packages)');
@@ -586,7 +579,6 @@ function showRegularDonationInterface() {
     const heroSection = document.querySelector('.donation__hero');
     const donationPackagesSection = document.getElementById('donation-packages').closest('section');
     const cartSummary = document.getElementById('cart-summary');
-    const mobileTotal = document.getElementById('mobile-total');
     const adminSection = document.getElementById('admin-section');
     const adminHero = document.getElementById('admin-hero');
     
@@ -594,7 +586,6 @@ function showRegularDonationInterface() {
     if (heroSection) heroSection.style.display = 'block';
     if (donationPackagesSection) donationPackagesSection.style.display = 'block';
     if (cartSummary) cartSummary.style.display = 'block';
-    if (mobileTotal) mobileTotal.style.display = 'block';
     
     // Hide admin elements
     if (adminSection) adminSection.style.display = 'none';
