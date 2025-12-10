@@ -204,7 +204,14 @@
             }
             
             .login-prompt h1 {
-                font-size: 2rem;
+                font-size: 2.5rem !important;
+                min-font-size: 2.5rem !important;
+                line-height: 1.2;
+            }
+            
+            .login-prompt p.lead {
+                font-size: 1.25rem !important;
+                min-font-size: 1.25rem !important;
             }
             
             .schedule-table {
@@ -238,6 +245,23 @@
             .admin-section .btn-group .btn {
                 margin-bottom: 10px;
                 width: 100%;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .login-prompt h1 {
+                font-size: 2.2rem !important;
+                min-font-size: 2.2rem !important;
+            }
+            
+            .login-prompt p.lead {
+                font-size: 1.1rem !important;
+                min-font-size: 1.1rem !important;
+            }
+            
+            .login-prompt {
+                padding: 40px 15px !important;
             }
         }
 
