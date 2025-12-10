@@ -509,7 +509,7 @@ class EventsManager {
                             📖 View Details
                         </button>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                            ${event.poster ? `<button onclick="eventsManager.downloadPoster('${event.id}')" class="btn-download-poster">📥 Download Poster</button>` : ''}
+                            ${event.poster ? `<button onclick="downloadPosterWithOptions('${event.id}', this)" class="btn-download-poster">📥 Download Poster</button>` : ''}
                             ${adminButtons}
                         </div>
                     </div>
@@ -554,7 +554,7 @@ class EventsManager {
                     ${event.description}
                 </div>
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    ${event.poster ? `<button onclick="eventsManager.downloadPoster('${event.id}')" class="btn-primary">Download Poster</button>` : ''}
+                    ${event.poster ? `<button onclick="downloadPosterWithOptions('${event.id}', this)" class="btn-primary">Download Poster</button>` : ''}
                     <button onclick="eventsManager.closeEventModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>
