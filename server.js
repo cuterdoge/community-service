@@ -186,6 +186,23 @@ async function createTables() {
         await db.query('INSERT INTO schedule_dates (week_start_date) VALUES (?)', [monday.toISOString().split('T')[0]]);
     }
 
+    // Create events table
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS events (
+            id VARCHAR(50) PRIMARY KEY,
+            title VARCHAR(200) NOT NULL,
+            description TEXT,
+            date DATETIME NOT NULL,
+            location VARCHAR(200),
+            poster LONGTEXT,
+            published BOOLEAN DEFAULT TRUE,
+            created_by VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            modified_by VARCHAR(50)
+        )
+    `);
+
     // Initialize donation packages if empty
     const [packageRows] = await db.query('SELECT COUNT(*) AS count FROM donation_packages');
     if (packageRows[0].count === 0) {
@@ -952,6 +969,132 @@ app.delete('/deleteDonationPackage/:id', async (req,res)=>{
 
     } catch(err) {
         console.error('Delete donation package error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// --- Events API endpoints ---
+
+// Get all events
+app.get('/events', async (req,res)=>{
+    try {
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        const [events] = await db.query(`
+            SELECT * FROM events 
+            WHERE published = TRUE 
+            ORDER BY date ASC
+        `);
+
+        res.json({success: true, events: events});
+
+    } catch(err) {
+        console.error('Get events error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// Create new event (admin only)
+app.post('/events', async (req,res)=>{
+    try {
+        const {id, title, description, date, location, poster, adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!id || !title || !description || !date || !location) {
+            return res.json({success: false, message: 'Missing required fields'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        // Check if event ID already exists
+        const [existing] = await db.query('SELECT * FROM events WHERE id = ?', [id]);
+        if (existing.length > 0) {
+            return res.json({success: false, message: 'Event ID already exists'});
+        }
+
+        await db.query(`
+            INSERT INTO events (id, title, description, date, location, poster, published, created_by) 
+            VALUES (?, ?, ?, ?, ?, ?, TRUE, 'admin')
+        `, [id, title, description, date, location, poster]);
+
+        res.json({success: true, message: 'Event created successfully'});
+
+    } catch(err) {
+        console.error('Create event error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// Update event (admin only)
+app.put('/events/:id', async (req,res)=>{
+    try {
+        const {id} = req.params;
+        const {title, description, date, location, poster, adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!title || !description || !date || !location) {
+            return res.json({success: false, message: 'Missing required fields'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        const [result] = await db.query(`
+            UPDATE events 
+            SET title = ?, description = ?, date = ?, location = ?, poster = ?, modified_by = 'admin'
+            WHERE id = ?
+        `, [title, description, date, location, poster, id]);
+
+        if (result.affectedRows === 0) {
+            return res.json({success: false, message: 'Event not found'});
+        }
+
+        res.json({success: true, message: 'Event updated successfully'});
+
+    } catch(err) {
+        console.error('Update event error:', err);
+        res.status(500).json({success: false, message: 'Database error'});
+    }
+});
+
+// Delete event (admin only)
+app.delete('/events/:id', async (req,res)=>{
+    try {
+        const {id} = req.params;
+        const {adminEmail} = req.body;
+        
+        // Verify admin permissions
+        if (adminEmail !== config.app.admin.email) {
+            return res.json({success: false, message: 'Admin access required'});
+        }
+
+        if (!db) {
+            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+        }
+
+        const [result] = await db.query('DELETE FROM events WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.json({success: false, message: 'Event not found'});
+        }
+
+        res.json({success: true, message: 'Event deleted successfully'});
+
+    } catch(err) {
+        console.error('Delete event error:', err);
         res.status(500).json({success: false, message: 'Database error'});
     }
 });

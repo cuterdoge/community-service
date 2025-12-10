@@ -1,7 +1,7 @@
 // Events Management System
 class EventsManager {
     constructor() {
-        this.events = this.loadEvents();
+        this.events = [];
         this.currentFilter = 'upcoming';
         this.currentUser = getCurrentUser();
         this.currentEditingEventId = null;
@@ -12,7 +12,7 @@ class EventsManager {
     init() {
         this.setupEventListeners();
         this.checkAdminAccess();
-        this.renderEvents();
+        this.loadEventsFromDatabase();
     }
 
     setupEventListeners() {
@@ -338,22 +338,16 @@ class EventsManager {
         const originalEvent = this.events[eventIndex];
         
         // Update event data
-        this.events[eventIndex] = {
-            ...originalEvent,
+        const updatedEvent = {
             title: title,
             description: description,
             date: date,
             location: location,
             poster: this.editTempPosterData || originalEvent.poster,
-            lastModified: new Date().toISOString(),
-            modifiedBy: this.currentUser.id
+            adminEmail: this.currentUser.email
         };
 
-        this.saveEvents();
-        this.renderEvents();
-        this.closeEditModal();
-
-        alert('Event updated successfully!');
+        this.updateEventInDatabase(this.currentEditingEventId, updatedEvent);
     }
 
     addEvent() {
@@ -374,28 +368,15 @@ class EventsManager {
             date: date,
             location: location,
             poster: this.tempPosterData || null,
-            published: true,
-            createdBy: this.currentUser.id,
-            createdAt: new Date().toISOString()
+            adminEmail: this.currentUser.email
         };
 
-        this.events.push(newEvent);
-        this.saveEvents();
-        this.renderEvents();
-        
-        // Reset form
-        document.getElementById('addEventForm').reset();
-        this.clearPosterUpload();
-
-        alert('Event published successfully!');
+        this.saveEventToDatabase(newEvent);
     }
 
     deleteEvent(eventId) {
         if (confirm('Are you sure you want to delete this event?')) {
-            this.events = this.events.filter(event => event.id !== eventId);
-            this.saveEvents();
-            this.renderEvents();
-            alert('Event deleted successfully!');
+            this.deleteEventFromDatabase(eventId);
         }
     }
 
@@ -586,18 +567,108 @@ class EventsManager {
         document.body.removeChild(link);
     }
 
-    loadEvents() {
-        const storedEvents = localStorage.getItem('communityEvents');
-        if (storedEvents) {
-            return JSON.parse(storedEvents);
+    async loadEventsFromDatabase() {
+        try {
+            const response = await fetch('/events');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.events = data.events;
+                console.log('Events loaded from database:', this.events.length);
+            } else {
+                console.error('Failed to load events from database:', data.message);
+                // Fallback to sample events if database fails
+                this.events = this.createSampleEvents();
+            }
+            
+            this.renderEvents();
+        } catch (error) {
+            console.error('Error loading events from database:', error);
+            // Fallback to sample events if database fails
+            this.events = this.createSampleEvents();
+            this.renderEvents();
         }
-        
-        // Return some sample events if none exist
-        return this.createSampleEvents();
     }
 
-    saveEvents() {
-        localStorage.setItem('communityEvents', JSON.stringify(this.events));
+    async saveEventToDatabase(eventData) {
+        try {
+            const response = await fetch('/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Event published successfully!');
+                // Reset form
+                document.getElementById('addEventForm').reset();
+                this.clearPosterUpload();
+                // Reload events from database
+                this.loadEventsFromDatabase();
+            } else {
+                alert('Failed to publish event: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error saving event to database:', error);
+            alert('Error saving event. Please try again.');
+        }
+    }
+
+    async updateEventInDatabase(eventId, eventData) {
+        try {
+            const response = await fetch(`/events/${eventId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Event updated successfully!');
+                this.closeEditModal();
+                // Reload events from database
+                this.loadEventsFromDatabase();
+            } else {
+                alert('Failed to update event: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error updating event in database:', error);
+            alert('Error updating event. Please try again.');
+        }
+    }
+
+    async deleteEventFromDatabase(eventId) {
+        try {
+            const response = await fetch(`/events/${eventId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    adminEmail: this.currentUser.email
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Event deleted successfully!');
+                // Reload events from database
+                this.loadEventsFromDatabase();
+            } else {
+                alert('Failed to delete event: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error deleting event from database:', error);
+            alert('Error deleting event. Please try again.');
+        }
     }
 
     createSampleEvents() {
