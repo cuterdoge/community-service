@@ -43,7 +43,7 @@ async function loadDonationPackages() {
     console.log('Attempting to load donation packages from server...');
     
     try {
-        const response = await fetch('/donationPackages');
+        const response = await fetch('/donationPackages?' + Date.now(), { cache: 'no-store' });
         console.log('Server response status:', response.status);
         
         if (!response.ok) {
@@ -54,6 +54,7 @@ async function loadDonationPackages() {
         console.log('Server response data:', result);
         
         if (result.success && result.packages && result.packages.length > 0) {
+            // Only include packages that actually exist (hard delete removes them completely)
             donationPackages = result.packages.map(pkg => ({
                 id: pkg.package_id,
                 name: pkg.name,
@@ -886,7 +887,7 @@ async function savePackage() {
         description: document.getElementById('package_description').value.trim(),
         price: parseFloat(document.getElementById('package_price').value),
         impact_description: document.getElementById('package_impact').value.trim(),
-        is_active: true, // Always active since we removed the toggle
+        // Removed is_active - no longer using soft delete
         adminEmail: currentUser.email
     };
     
@@ -963,13 +964,11 @@ async function deletePackage(packageId) {
         console.log('Delete response data:', data);
         
         if (data.success) {
-            showMessage('Package deleted successfully', 'success');
-            // Force immediate refresh with cache busting
-            setTimeout(() => {
-                console.log('Refreshing admin packages after deletion...');
-                loadAdminPackages();
-                loadDonationPackages(); // Refresh public view too
-            }, 1000); // Increased delay to 1 second
+            showMessage('Package permanently deleted', 'success');
+            // Immediate refresh - package should be gone from database
+            console.log('Package deleted from database, refreshing views...');
+            loadAdminPackages();
+            loadDonationPackages(); // Refresh public view too
         } else {
             showMessage('Delete failed: ' + data.message, 'error');
             console.error('Server delete error:', data.message);

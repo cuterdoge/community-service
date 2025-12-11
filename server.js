@@ -622,10 +622,17 @@ app.post('/removeUnavailableDate', async (req,res)=>{
     }
 });
 
-// --- Get donation packages ---
+// --- Get donation packages (only existing packages since we use hard delete) ---
 app.get('/donationPackages', async (req,res)=>{
+    // Disable caching so clients always get fresh data
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
     try{
-        const [packages] = await db.query('SELECT * FROM donation_packages WHERE is_active = TRUE ORDER BY price ASC');
+        // No need to filter by is_active since hard delete removes packages completely
+        const [packages] = await db.query('SELECT * FROM donation_packages ORDER BY price ASC');
+        console.log('Retrieved packages for public view:', packages.length);
         res.json({success: true, packages: packages});
     }catch(err){
         console.error('Get donation packages error:', err);
@@ -856,6 +863,11 @@ app.get('/getAllDonations', async (req,res)=>{
 
 // --- Get all donation packages (including inactive) for admin ---
 app.get('/getAllDonationPackages', async (req,res)=>{
+    // Disable caching for admin list
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
     try {
         if (!db) {
             return res.status(503).json({success: false, message: 'Database connection unavailable'});
@@ -895,8 +907,8 @@ app.post('/createDonationPackage', async (req,res)=>{
         }
 
         await db.query(`
-            INSERT INTO donation_packages (package_id, name, description, price, impact_description, icon, is_active) 
-            VALUES (?, ?, ?, ?, ?, ?, TRUE)
+            INSERT INTO donation_packages (package_id, name, description, price, impact_description, icon) 
+            VALUES (?, ?, ?, ?, ?, ?)
         `, [package_id, name, description, parseFloat(price), impact_description || '', icon || '📦']);
 
         res.json({success: true, message: 'Donation package created successfully'});
@@ -910,7 +922,7 @@ app.post('/createDonationPackage', async (req,res)=>{
 // --- Update donation package (admin) ---
 app.put('/updateDonationPackage', async (req,res)=>{
     try {
-        const {id, name, description, price, impact_description, icon, is_active, adminEmail} = req.body;
+        const {id, name, description, price, impact_description, icon, adminEmail} = req.body;
         
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
@@ -927,9 +939,9 @@ app.put('/updateDonationPackage', async (req,res)=>{
 
         const [result] = await db.query(`
             UPDATE donation_packages 
-            SET name = ?, description = ?, price = ?, impact_description = ?, icon = ?, is_active = ?
+            SET name = ?, description = ?, price = ?, impact_description = ?, icon = ?
             WHERE id = ?
-        `, [name, description, parseFloat(price), impact_description || '', icon || '📦', is_active !== false, id]);
+        `, [name, description, parseFloat(price), impact_description || '', icon || '📦', id]);
 
         if (result.affectedRows === 0) {
             return res.json({success: false, message: 'Package not found'});
@@ -943,33 +955,50 @@ app.put('/updateDonationPackage', async (req,res)=>{
     }
 });
 
-// --- Delete/Deactivate donation package (admin) ---
+// --- Delete donation package (admin) - TRUE HARD DELETE ---
 app.delete('/deleteDonationPackage/:id', async (req,res)=>{
     try {
         const {id} = req.params;
         const {adminEmail} = req.body;
         
+        console.log('DELETE request received for package ID:', id);
+        console.log('Admin email:', adminEmail);
+        
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
+            console.log('Admin verification failed');
             return res.json({success: false, message: 'Admin access required'});
         }
 
         if (!db) {
+            console.log('Database not connected');
             return res.status(503).json({success: false, message: 'Database connection unavailable'});
         }
 
-        // Instead of deleting, we deactivate to preserve data integrity
-        const [result] = await db.query('UPDATE donation_packages SET is_active = FALSE WHERE id = ?', [id]);
-
-        if (result.affectedRows === 0) {
+        // Check if package exists first
+        const [existingPackage] = await db.query('SELECT * FROM donation_packages WHERE id = ?', [id]);
+        if (existingPackage.length === 0) {
+            console.log('Package not found with ID:', id);
             return res.json({success: false, message: 'Package not found'});
         }
 
-        res.json({success: true, message: 'Donation package deactivated successfully'});
+        console.log('Found package to delete:', existingPackage[0].name);
+
+        // HARD DELETE - Permanently remove from database
+        const [result] = await db.query('DELETE FROM donation_packages WHERE id = ?', [id]);
+
+        console.log('Delete result - affected rows:', result.affectedRows);
+
+        if (result.affectedRows === 0) {
+            return res.json({success: false, message: 'Failed to delete package'});
+        }
+
+        console.log('Package successfully deleted from database');
+        res.json({success: true, message: 'Donation package permanently deleted'});
 
     } catch(err) {
         console.error('Delete donation package error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({success: false, message: 'Database error: ' + err.message});
     }
 });
 
