@@ -368,17 +368,19 @@
 
                 <!-- Admin section (only shown for admins) -->
                 <div id="admin-section" style="display:none;" class="u-mt-xl">
-                    <div class="card">
-                        <div class="card__header">
-                            <h3 class="u-text-center">Admin Controls</h3>
-                        </div>
-                        <div class="card__body">
-                            <div class="flex flex--center flex--gap-md u-mb-lg">
-                                <button onclick="resetAllSlots()" class="button button--secondary">Reset All Bookings</button>
-                                <button onclick="viewAllBookings()" class="button button--outline">View All Bookings</button>
-                                <button onclick="manageUnavailableDates()" class="button button--danger">Manage Unavailable Dates</button>
+                    <div class="container px-3 px-md-4">
+                        <div class="card">
+                            <div class="card__header" style="padding-left: 20px; padding-right: 20px;">
+                                <h3 class="u-text-center">Admin Controls</h3>
                             </div>
-                            <div id="admin-bookings" class="u-mt-lg"></div>
+                            <div class="card__body" style="padding-left: 20px; padding-right: 20px;">
+                                <div class="flex flex--center flex--gap-md u-mb-lg">
+                                    <button onclick="resetAllSlots()" class="button button--secondary">Reset All Bookings</button>
+                                    <button onclick="viewAllBookings()" class="button button--outline">View All Bookings</button>
+                                    <button onclick="manageUnavailableDates()" class="button button--danger">Manage Unavailable Dates</button>
+                                </div>
+                                <div id="admin-bookings" class="u-mt-lg"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
