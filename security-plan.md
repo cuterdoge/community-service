@@ -9,6 +9,7 @@ Decisions and environment
 - Production domain (for CORS): https://community-service-ahp0.onrender.com/
 - Allow origin: self and the production domain above
 - DB TLS CA: none available at this time; we’ll keep current behavior and revisit tightening
+- Database reset: You will nuke the current Railway MySQL. The server boots with auto table creation (no migration step).
 
 Phased plan
 
@@ -31,7 +32,7 @@ Phase 1: Authentication with express-session
   - volunteers table will include is_admin TINYINT(1) DEFAULT 0
 
 Phase 2: Authorization
-- DB migration: ALTER TABLE volunteers ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0
+- DB initialization: We will recreate the database from scratch (you will nuke the existing Railway DB). server.js auto-creates required tables on startup, so no explicit migration is needed.
 - Middleware:
   - requireAuth: ensures req.session.user exists
   - requireAdmin: ensures req.session.user?.is_admin === true
