@@ -1006,11 +1006,6 @@ app.put('/updateDonationPackage', requireAdmin, async (req,res)=>{
     try {
         const {id, name, description, price, impact_description, icon} = req.body;
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            return res.json({success: false, message: 'Admin access required'});
-        }
-
         if (!id || !name || !description || !price) {
             return res.json({success: false, message: 'Missing required fields'});
         }
@@ -1169,13 +1164,6 @@ app.put('/events/:id', requireAdmin, async (req,res)=>{
 app.delete('/events/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
-        const {adminEmail} = req.body;
-        
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            return res.json({success: false, message: 'Admin access required'});
-        }
-
         if (!db) {
             return res.status(503).json({success: false, message: 'Database connection unavailable'});
         }
@@ -1198,13 +1186,6 @@ app.delete('/events/:id', requireAdmin, async (req,res)=>{
 app.delete('/deleteDonation/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
-        const {adminEmail} = req.body;
-        
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            return res.json({success: false, message: 'Admin access required'});
-        }
-
         if (!db) {
             return res.status(503).json({success: false, message: 'Database connection unavailable'});
         }

@@ -343,8 +343,7 @@ class EventsManager {
             description: description,
             date: date,
             location: location,
-            poster: this.editTempPosterData || originalEvent.poster,
-            adminEmail: this.currentUser.email
+            poster: this.editTempPosterData || originalEvent.poster
         };
 
         this.updateEventInDatabase(this.currentEditingEventId, updatedEvent);
@@ -367,8 +366,7 @@ class EventsManager {
             description: description,
             date: date,
             location: location,
-            poster: this.tempPosterData || null,
-            adminEmail: this.currentUser.email
+            poster: this.tempPosterData || null
         };
 
         this.saveEventToDatabase(newEvent);
@@ -569,7 +567,7 @@ class EventsManager {
 
     async loadEventsFromDatabase() {
         try {
-            const response = await fetch('/events');
+            const response = await apiFetch('/events');
             const data = await response.json();
             
             if (data.success) {
@@ -651,9 +649,7 @@ class EventsManager {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    adminEmail: this.currentUser.email
-                })
+                body: JSON.stringify({})
             });
             
             const data = await response.json();

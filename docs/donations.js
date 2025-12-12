@@ -888,7 +888,7 @@ async function savePackage() {
         price: parseFloat(document.getElementById('package_price').value),
         impact_description: document.getElementById('package_impact').value.trim(),
         // Removed is_active - no longer using soft delete
-        adminEmail: currentUser.email
+      
     };
     
     // Validation
