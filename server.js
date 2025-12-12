@@ -28,7 +28,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            imgSrc: ["'self'", 'data:'],
+            imgSrc: ["'self'", 'data:', "https://images.unsplash.com"],
             connectSrc: ["'self'"]
         }
     }

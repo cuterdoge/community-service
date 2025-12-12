@@ -49,7 +49,7 @@ Phase 3: Security headers and CSP
   - default-src 'self'
   - script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com
   - style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net
-  - img-src 'self' data:
+  - img-src 'self' data: https://images.unsplash.com
   - connect-src 'self'
 - Plan to tighten CSP once inline usage is reduced
 
