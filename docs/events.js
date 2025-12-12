@@ -22,7 +22,7 @@ class EventsManager {
             searchInput.addEventListener('input', () => {
                 this.searchEvents();
             });
-            
+
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     this.searchEvents();
@@ -36,10 +36,10 @@ class EventsManager {
             btn.addEventListener('click', (e) => {
                 // Remove active class from all buttons
                 filterButtons.forEach(b => b.classList.remove('active'));
-                
+
                 // Add active class to clicked button
                 e.target.classList.add('active');
-                
+
                 // Update current filter and render events
                 this.currentFilter = e.target.dataset.filter;
                 this.renderEvents();
@@ -150,7 +150,7 @@ class EventsManager {
         uploadText.style.display = 'none';
         uploadPreview.style.display = 'block';
         previewImage.src = imageData;
-        
+
         // Store the image data for later use
         this.tempPosterData = imageData;
     }
@@ -163,7 +163,7 @@ class EventsManager {
         uploadText.style.display = 'block';
         uploadPreview.style.display = 'none';
         fileInput.value = '';
-        
+
         this.tempPosterData = null;
     }
 
@@ -172,7 +172,7 @@ class EventsManager {
         console.log('Checking admin access...');
         console.log('Current user:', this.currentUser);
         console.log('Is admin:', this.currentUser && this.currentUser.isAdmin);
-        
+
         if (this.currentUser && this.currentUser.isAdmin) {
             adminSection.style.display = 'block';
             console.log('Admin section shown');
@@ -244,7 +244,7 @@ class EventsManager {
         editUploadText.style.display = 'none';
         editUploadPreview.style.display = 'block';
         editPreviewImage.src = imageData;
-        
+
         // Store the image data for later use
         this.editTempPosterData = imageData;
     }
@@ -257,11 +257,11 @@ class EventsManager {
         editUploadText.style.display = 'block';
         editUploadPreview.style.display = 'none';
         editFileInput.value = '';
-        
+
         // Reset to original poster if editing
         const currentEvent = this.events.find(e => e.id === this.currentEditingEventId);
         this.editTempPosterData = currentEvent ? currentEvent.poster : null;
-        
+
         if (this.editTempPosterData) {
             this.showEditPosterPreview(this.editTempPosterData);
         }
@@ -276,7 +276,7 @@ class EventsManager {
         }
 
         console.log('Opening edit modal for event:', event);
-        
+
         // Set current editing event
         this.currentEditingEventId = eventId;
         this.editTempPosterData = event.poster;
@@ -304,12 +304,12 @@ class EventsManager {
         const modal = document.getElementById('editEventModal');
         modal.style.display = 'none';
         document.body.style.overflow = '';
-        
+
         // Reset form and temp data
         document.getElementById('editEventForm').reset();
         this.currentEditingEventId = null;
         this.editTempPosterData = null;
-        
+
         // Reset upload area
         const editUploadText = document.getElementById('editUploadText');
         const editUploadPreview = document.getElementById('editUploadPreview');
@@ -336,15 +336,14 @@ class EventsManager {
         }
 
         const originalEvent = this.events[eventIndex];
-        
+
         // Update event data
         const updatedEvent = {
             title: title,
             description: description,
             date: date,
             location: location,
-            poster: this.editTempPosterData || originalEvent.poster,
-            adminEmail: this.currentUser.email
+            poster: this.editTempPosterData || originalEvent.poster
         };
 
         this.updateEventInDatabase(this.currentEditingEventId, updatedEvent);
@@ -367,8 +366,7 @@ class EventsManager {
             description: description,
             date: date,
             location: location,
-            poster: this.tempPosterData || null,
-            adminEmail: this.currentUser.email
+            poster: this.tempPosterData || null
         };
 
         this.saveEventToDatabase(newEvent);
@@ -391,7 +389,7 @@ class EventsManager {
 
         // Apply search filter
         if (searchTerm) {
-            filteredEvents = filteredEvents.filter(event => 
+            filteredEvents = filteredEvents.filter(event =>
                 event.title.toLowerCase().includes(searchTerm) ||
                 event.description.toLowerCase().includes(searchTerm) ||
                 event.location.toLowerCase().includes(searchTerm)
@@ -425,7 +423,7 @@ class EventsManager {
         if (filteredEvents.length === 0) {
             eventsGrid.style.display = 'none';
             noEventsMessage.style.display = 'block';
-            
+
             // Update message based on filter
             const messageElement = noEventsMessage.querySelector('h3:nth-child(2)');
             if (this.currentFilter === 'upcoming') {
@@ -438,8 +436,8 @@ class EventsManager {
         } else {
             eventsGrid.style.display = 'grid';
             noEventsMessage.style.display = 'none';
-            
-            eventsGrid.innerHTML = filteredEvents.map(event => this.createEventCard(event)).join('');
+
+            eventsGrid.innerHTML = DOMPurify.sanitize(filteredEvents.map(event => this.createEventCard(event)).join(''));
         }
     }
 
@@ -454,16 +452,16 @@ class EventsManager {
             minute: '2-digit'
         });
 
-        const truncatedDescription = event.description.length > 100 
-            ? event.description.substring(0, 100) + '...' 
+        const truncatedDescription = event.description.length > 100
+            ? event.description.substring(0, 100) + '...'
             : event.description;
 
-        const posterContent = event.poster 
+        const posterContent = event.poster
             ? `<img src="${event.poster}" alt="${event.title}" class="event-poster">`
             : `<div class="event-poster">📅<br>No Image</div>`;
 
         // Admin-only edit and delete buttons
-        const adminButtons = (this.currentUser && this.currentUser.isAdmin) 
+        const adminButtons = (this.currentUser && this.currentUser.isAdmin)
             ? `
                 <button onclick="eventsManager.openEditModal('${event.id}')" class="btn-download-poster" style="background: #fd7e14; color: white; border-color: #fd7e14;">
                     ✏️ Edit
@@ -505,7 +503,7 @@ class EventsManager {
 
         const modal = document.getElementById('eventModal');
         const modalContent = document.getElementById('modalContent');
-        
+
         const eventDate = new Date(event.date);
         const formattedDate = eventDate.toLocaleDateString('en-US', {
             weekday: 'long',
@@ -516,11 +514,11 @@ class EventsManager {
             minute: '2-digit'
         });
 
-        const posterContent = event.poster 
+        const posterContent = event.poster
             ? `<img src="${event.poster}" alt="${event.title}" style="width: 100%; max-width: 400px; border-radius: 10px; margin-bottom: 20px;">`
             : `<div style="width: 100%; height: 200px; background: linear-gradient(45deg, #a88db4, #480060); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; margin-bottom: 20px;">📅<br>Event</div>`;
 
-        modalContent.innerHTML = `
+        modalContent.innerHTML = DOMPurify.sanitize(`
             <div style="text-align: center;">
                 ${posterContent}
                 <h2 style="color: #480060; margin-bottom: 10px;">${event.title}</h2>
@@ -539,7 +537,7 @@ class EventsManager {
                     <button onclick="eventsManager.closeEventModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>
-        `;
+        `);
 
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -569,9 +567,9 @@ class EventsManager {
 
     async loadEventsFromDatabase() {
         try {
-            const response = await fetch('/events');
+            const response = await apiFetch('/events');
             const data = await response.json();
-            
+
             if (data.success) {
                 this.events = data.events;
                 console.log('Events loaded from database:', this.events.length);
@@ -580,7 +578,7 @@ class EventsManager {
                 // Fallback to sample events if database fails
                 this.events = this.createSampleEvents();
             }
-            
+
             this.renderEvents();
         } catch (error) {
             console.error('Error loading events from database:', error);
@@ -592,16 +590,16 @@ class EventsManager {
 
     async saveEventToDatabase(eventData) {
         try {
-            const response = await fetch('/events', {
+            const response = await apiFetch('/events', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(eventData)
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 alert('Event published successfully!');
                 // Reset form
@@ -620,16 +618,13 @@ class EventsManager {
 
     async updateEventInDatabase(eventId, eventData) {
         try {
-            const response = await fetch(`/events/${eventId}`, {
+            const response = await apiFetch(`/events/${eventId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(eventData)
+                body: eventData
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 alert('Event updated successfully!');
                 this.closeEditModal();
@@ -646,18 +641,13 @@ class EventsManager {
 
     async deleteEventFromDatabase(eventId) {
         try {
-            const response = await fetch(`/events/${eventId}`, {
+            const response = await apiFetch(`/events/${eventId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    adminEmail: this.currentUser.email
-                })
+                body: {}
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 alert('Event deleted successfully!');
                 // Reload events from database

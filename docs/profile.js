@@ -215,9 +215,9 @@ async function loadMyVolunteerSlots() {
         const slotsContainer = document.getElementById('my-volunteer-slots');
         
         if (!data.bookings || data.bookings.length === 0) {
-            slotsContainer.innerHTML = '<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>';
+            slotsContainer.innerHTML = DOMPurify.sanitize('<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>');
         } else {
-            slotsContainer.innerHTML = `
+            slotsContainer.innerHTML = DOMPurify.sanitize(`
                 <div class="bookings-list">
                     ${data.bookings.map(booking => {
                         console.log('Booking slot:', booking.slot);
@@ -245,11 +245,11 @@ async function loadMyVolunteerSlots() {
                         </div>`
                     }).join('')}
                 </div>
-            `;
+            `);
         }
     } catch (err) {
         console.error('Failed to load volunteer slots:', err);
-        document.getElementById('my-volunteer-slots').innerHTML = '<p style="color: red;">Failed to load volunteer slots. Please try again.</p>';
+        document.getElementById('my-volunteer-slots').innerHTML = DOMPurify.sanitize('<p style="color: red;">Failed to load volunteer slots. Please try again.</p>');
     }
 }
 
@@ -287,7 +287,7 @@ async function cancelVolunteerSlot(slotId) {
 async function loadMyDonations() {
     try {
         const donationsContainer = document.getElementById('my-donations');
-        donationsContainer.innerHTML = '<p>Loading your donation history...</p>';
+        donationsContainer.innerHTML = DOMPurify.sanitize('<p>Loading your donation history...</p>');
         
         // Get donations from database
         const response = await fetch('/getUserDonations', {
@@ -309,13 +309,13 @@ async function loadMyDonations() {
         const donationHistory = result.donations || [];
         
         if (donationHistory.length === 0) {
-            donationsContainer.innerHTML = `
+            donationsContainer.innerHTML = DOMPurify.sanitize(`
                 <div class="no-donations">
                     <p>🎯 You haven't made any donations yet.</p>
                     <p>Start making a difference in our community today!</p>
                     <a href="donations.html" class="donate-now-btn">Make Your First Donation</a>
                 </div>
-            `;
+            `);
             return;
         }
         
@@ -326,7 +326,7 @@ async function loadMyDonations() {
             sum + donation.items.reduce((itemSum, item) => itemSum + parseInt(item.quantity), 0), 0);
         
         // Render donations with stats
-        donationsContainer.innerHTML = `
+        donationsContainer.innerHTML = DOMPurify.sanitize(`
             <div class="donation-stats">
                 <div class="stat-item">
                     
@@ -348,12 +348,12 @@ async function loadMyDonations() {
             <div class="donations-list">
                 ${donationHistory.map(donation => renderDonationItem(donation)).join('')}
             </div>
-        `;
+        `);
         
     } catch (error) {
         console.error('Error loading donations:', error);
         document.getElementById('my-donations').innerHTML = 
-            '<p style="color: red;">Failed to load donation history. Please try again.</p>';
+            DOMPurify.sanitize('<p style="color: red;">Failed to load donation history. Please try again.</p>');
     }
 }
 

@@ -47,7 +47,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (hasErrors) return;
 
     try {
-        const res = await fetch('/login', {
+        const res = await apiFetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })

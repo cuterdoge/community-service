@@ -7,11 +7,11 @@ let donationCart = {};
 // Initialize donations page
 async function initializeDonations() {
     console.log('Initializing donations page...');
-    
+
     // Show loading state immediately
     const container = document.getElementById('donation-packages');
     if (container) {
-        container.innerHTML = `
+        container.innerHTML = DOMPurify.sanitize(`
             <div class="col-12">
                 <div class="text-center p-5">
                     <h3>Loading donation packages...</h3>
@@ -21,16 +21,16 @@ async function initializeDonations() {
                     </div>
                 </div>
             </div>
-        `;
+        `);
     }
-    
+
     // Try to load from database first, then fallback
     const loadedFromDB = await loadDonationPackages();
-    
+
     // Always render packages (either from DB or fallback)
     renderDonationPackages();
     updateCartDisplay();
-    
+
     if (loadedFromDB) {
         console.log('Donations page initialized with database packages');
     } else {
@@ -41,18 +41,18 @@ async function initializeDonations() {
 // Load donation packages from database
 async function loadDonationPackages() {
     console.log('Attempting to load donation packages from server...');
-    
+
     try {
         const response = await fetch('/donationPackages?' + Date.now(), { cache: 'no-store' });
         console.log('Server response status:', response.status);
-        
+
         if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
         }
-        
+
         const result = await response.json();
         console.log('Server response data:', result);
-        
+
         if (result.success && result.packages && result.packages.length > 0) {
             // Only include packages that actually exist (hard delete removes them completely)
             donationPackages = result.packages.map(pkg => ({
@@ -83,7 +83,7 @@ async function loadDonationPackages() {
 function getPackageImageName(title) {
     const imageMap = {
         'Water Supply': 'water-supply.jpg',
-        'Blanket Bundle': 'blanket-bundle.jpg', 
+        'Blanket Bundle': 'blanket-bundle.jpg',
         'Cooking Oil': 'cooking-oil.jpg',
         'Rice Supply': 'rice-supply.jpg',
         'Medical Kit': 'medical-kit.jpg',
@@ -171,7 +171,7 @@ function loadFallbackPackages() {
             details: 'Soap, toothbrushes, toothpaste, and personal hygiene products'
         }
     ];
-    
+
     if (typeof showNotification === 'function') {
         showNotification('Using offline donation packages', 'warning');
     }
@@ -180,9 +180,9 @@ function loadFallbackPackages() {
 // Render donation packages
 function renderDonationPackages() {
     const container = document.getElementById('donation-packages');
-    
+
     if (!donationPackages || donationPackages.length === 0) {
-        container.innerHTML = `
+        container.innerHTML = DOMPurify.sanitize(`
             <div class="col-12">
                 <div class="text-center p-5">
                     <h3>Loading donation packages...</h3>
@@ -192,14 +192,14 @@ function renderDonationPackages() {
                     </div>
                 </div>
             </div>
-        `;
+        `);
         return;
     }
-    
+
     // Check if current user is admin
     const currentUser = getCurrentUser();
     const isAdmin = currentUser && currentUser.isAdmin;
-    
+
     //   ${!isAdmin ? `
     //                 <div class="donation__image">
     //                     <img src="images/${getPackageImageName(pkg.name)}" 
@@ -210,7 +210,7 @@ function renderDonationPackages() {
     //                 </div>
     //                 ` : ''}
 
-    container.innerHTML = donationPackages.map(pkg => `
+    container.innerHTML = DOMPurify.sanitize(donationPackages.map(pkg => `
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
             <div class="card card--donation">
                 <div class="card__header">
@@ -239,7 +239,7 @@ function renderDonationPackages() {
                 </div>
             </div>
         </div>
-    `).join('');
+    `).join(''));
 }
 
 // Update quantity
@@ -255,30 +255,30 @@ function updateQuantity(packageId, change) {
 function setQuantity(packageId, quantity) {
     const qty = Math.max(0, parseInt(quantity) || 0);
     document.getElementById(`qty-${packageId}`).value = qty;
-    
+
     if (qty > 0) {
         donationCart[packageId] = qty;
     } else {
         delete donationCart[packageId];
     }
-    
+
     updateCartDisplay();
 }
 
 // Add to cart
 function addToCart(packageId) {
     const quantity = parseInt(document.getElementById(`qty-${packageId}`).value) || 0;
-    
+
     if (quantity <= 0) {
         alert('Please select a quantity first');
         return;
     }
-    
+
     donationCart[packageId] = (donationCart[packageId] || 0) + quantity;
     document.getElementById(`qty-${packageId}`).value = donationCart[packageId];
-    
+
     updateCartDisplay();
-    
+
     // Show success message
     const pkg = donationPackages.find(p => p.id === packageId);
     showNotification(`Added ${quantity}x ${pkg.name} to cart!`);
@@ -289,19 +289,19 @@ function updateCartDisplay() {
     const cartSummary = document.getElementById('cart-summary');
     const cartItems = document.getElementById('cart-items');
     const cartTotal = document.getElementById('cart-total');
-    
+
     const cartEntries = Object.entries(donationCart);
     const hasItems = cartEntries.length > 0;
-    
+
     if (hasItems) {
         // Show cart summary
         cartSummary.style.display = 'block';
-        
+
         // Render cart items
-        cartItems.innerHTML = cartEntries.map(([packageId, quantity]) => {
+        cartItems.innerHTML = DOMPurify.sanitize(cartEntries.map(([packageId, quantity]) => {
             const pkg = donationPackages.find(p => p.id === packageId);
             const subtotal = pkg.price * quantity;
-            
+
             return `
                 <div class="row align-items-center mb-3 pb-3 border-bottom">
                     <div class="col-md-6">
@@ -321,16 +321,16 @@ function updateCartDisplay() {
                     </div>
                 </div>
             `;
-        }).join('');
-        
+        }).join(''));
+
         // Calculate total
         const total = cartEntries.reduce((sum, [packageId, quantity]) => {
             const pkg = donationPackages.find(p => p.id === packageId);
             return sum + (pkg.price * quantity);
         }, 0);
-        
+
         cartTotal.textContent = `Total: RM ${total}`;
-        
+
     } else {
         cartSummary.style.display = 'none';
     }
@@ -341,7 +341,7 @@ function removeFromCart(packageId) {
     delete donationCart[packageId];
     document.getElementById(`qty-${packageId}`).value = 0;
     updateCartDisplay();
-    
+
     const pkg = donationPackages.find(p => p.id === packageId);
     showNotification(`Removed ${pkg.name} from cart`);
 }
@@ -349,12 +349,12 @@ function removeFromCart(packageId) {
 // Clear cart
 function clearCart() {
     donationCart = {};
-    
+
     // Reset all quantity inputs
     donationPackages.forEach(pkg => {
         document.getElementById(`qty-${pkg.id}`).value = 0;
     });
-    
+
     updateCartDisplay();
     showNotification('Cart cleared');
 }
@@ -368,7 +368,7 @@ function showCartSummary() {
 // Proceed to checkout
 function proceedToCheckout() {
     const currentUser = getCurrentUser();
-    
+
     if (!currentUser) {
         if (confirm('You need to login to make a donation. Would you like to login now?')) {
             // Store cart in sessionStorage for after login
@@ -377,14 +377,14 @@ function proceedToCheckout() {
         }
         return;
     }
-    
+
     // Calculate total and prepare donation data
     const cartEntries = Object.entries(donationCart);
     const total = cartEntries.reduce((sum, [packageId, quantity]) => {
         const pkg = donationPackages.find(p => p.id === packageId);
         return sum + (pkg.price * quantity);
     }, 0);
-    
+
     const donationData = {
         items: cartEntries.map(([packageId, quantity]) => {
             const pkg = donationPackages.find(p => p.id === packageId);
@@ -400,10 +400,10 @@ function proceedToCheckout() {
         date: new Date().toISOString(),
         transactionId: generateTransactionId()
     };
-    
+
     // Store donation for processing
     sessionStorage.setItem('currentDonation', JSON.stringify(donationData));
-    
+
     // Redirect to payment page
     window.location.href = 'donation-checkout.html';
 }
@@ -419,9 +419,9 @@ function generateTransactionId() {
 function showNotification(message, type = 'success') {
     // Create notification element
     const notification = document.createElement('div');
-    
+
     const bgColor = type === 'warning' ? '#ffc107' : (type === 'error' ? '#dc3545' : '#28a745');
-    
+
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -435,7 +435,7 @@ function showNotification(message, type = 'success') {
         font-weight: 500;
     `;
     notification.textContent = message;
-    
+
     // Ensure DOM is ready before appending
     if (document.body) {
         document.body.appendChild(notification);
@@ -445,7 +445,7 @@ function showNotification(message, type = 'success') {
             document.body.appendChild(notification);
         });
     }
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
         if (notification && notification.parentNode) {
@@ -455,22 +455,22 @@ function showNotification(message, type = 'success') {
 }
 
 // Check for pending donation cart after login
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const pendingCart = sessionStorage.getItem('pendingDonationCart');
     if (pendingCart && getCurrentUser()) {
         donationCart = JSON.parse(pendingCart);
         sessionStorage.removeItem('pendingDonationCart');
-        
+
         // Update quantity inputs
         Object.entries(donationCart).forEach(([packageId, quantity]) => {
             const input = document.getElementById(`qty-${packageId}`);
             if (input) input.value = quantity;
         });
-        
+
         updateCartDisplay();
         showNotification('Welcome back! Your cart has been restored.');
     }
-    
+
     // Check user auth and show appropriate interface (same as app.js)
     checkUserAuth();
 });
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Check if user is logged in and show appropriate interface (copied from app.js)
 function checkUserAuth() {
     currentUser = getCurrentUser();
-    
+
     if (currentUser) {
         console.log('User found:', currentUser);
         showDonationInterface();
@@ -523,12 +523,12 @@ function hideRegularDonationElements() {
     const heroSection = document.querySelector('.donation__hero');
     const donationPackagesContainer = document.getElementById('donation-packages');
     const cartSummary = document.getElementById('cart-summary');
-    
+
     // Hide individual elements, not entire sections to avoid hiding admin section
     if (heroSection) heroSection.style.display = 'none';
     if (donationPackagesContainer) donationPackagesContainer.style.display = 'none';
     if (cartSummary) cartSummary.style.display = 'none';
-    
+
     // Also hide any other donation-related elements but preserve admin section
     const donationRows = document.querySelectorAll('.row:has(#donation-packages)');
     donationRows.forEach(row => {
@@ -546,26 +546,26 @@ function hideRegularDonationElements() {
 // Create admin-specific hero section
 function createAdminHero() {
     const container = document.querySelector('.container-fluid');
-    
+
     // Check if admin hero already exists
     if (document.getElementById('admin-hero')) {
         return;
     }
-    
+
     const adminHero = document.createElement('section');
     adminHero.id = 'admin-hero';
     adminHero.className = 'py-5';
     adminHero.style.background = 'linear-gradient(135deg, #a88db4 0%, #480060 100%)';
     adminHero.style.color = 'white';
-    adminHero.innerHTML = `
+    adminHero.innerHTML = DOMPurify.sanitize(`
         <div class="container">
             <div class="text-center">
                 <h1 class="display-4 fw-bold mb-4"> Donation Management Dashboard</h1>
                 <p class="lead mb-0">Manage donation packages, track donations, and view analytics</p>
             </div>
         </div>
-    `;
-    
+    `);
+
     // Insert after the header (first element in container-fluid)
     const firstChild = container.firstElementChild;
     if (firstChild) {
@@ -582,12 +582,12 @@ function showRegularDonationInterface() {
     const cartSummary = document.getElementById('cart-summary');
     const adminSection = document.getElementById('admin-section');
     const adminHero = document.getElementById('admin-hero');
-    
+
     // Show regular elements
     if (heroSection) heroSection.style.display = 'block';
     if (donationPackagesSection) donationPackagesSection.style.display = 'block';
     if (cartSummary) cartSummary.style.display = 'block';
-    
+
     // Hide admin elements
     if (adminSection) adminSection.style.display = 'none';
     if (adminHero) adminHero.remove();
@@ -596,13 +596,13 @@ function showRegularDonationInterface() {
 // Create admin section if it's missing from the DOM
 function createAdminSectionIfMissing() {
     console.log('Creating missing admin section...');
-    
+
     const container = document.querySelector('.container');
     if (!container) {
         console.error('No container found to add admin section');
         return;
     }
-    
+
     //   <div class="d-flex gap-2">
     //                             <input type="date" id="filter-date-from" class="form-control" placeholder="From" style="width: 150px;">
     //                             <input type="date" id="filter-date-to" class="form-control" placeholder="To" style="width: 150px;">
@@ -657,10 +657,10 @@ function createAdminSectionIfMissing() {
             </div>
         </div>
     `;
-    
+
     // Add admin section to the end of the container
-    container.insertAdjacentHTML('beforeend', adminSectionHTML);
-    
+    container.insertAdjacentHTML('beforeend', DOMPurify.sanitize(adminSectionHTML));
+
     // Now try to show it
     const newAdminSection = document.getElementById('admin-section');
     if (newAdminSection) {
@@ -687,33 +687,33 @@ function loadAdminData() {
 // Admin tab navigation
 function showManagePackages() {
     console.log('=== Show Manage Packages ===');
-    
+
     // Update button states
     const manageBtn = document.getElementById('manage-packages-btn');
     const historyBtn = document.getElementById('donation-history-btn');
     const statsBtn = document.getElementById('donation-stats-btn');
-    
+
     console.log('Manage packages button found:', !!manageBtn);
     console.log('History button found:', !!historyBtn);
     console.log('Stats button found:', !!statsBtn);
-    
+
     if (manageBtn) manageBtn.className = 'btn btn-primary';
     if (historyBtn) historyBtn.className = 'btn btn-outline-primary';
     if (statsBtn) statsBtn.className = 'btn btn-outline-primary';
-    
+
     // Show/hide sections
     const manageSection = document.getElementById('manage-packages-section');
     const historySection = document.getElementById('donation-history-section');
     const statsSection = document.getElementById('donation-stats-section');
-    
+
     console.log('Manage packages section found:', !!manageSection);
     console.log('History section found:', !!historySection);
     console.log('Stats section found:', !!statsSection);
-    
+
     if (manageSection) manageSection.style.display = 'block';
     if (historySection) historySection.style.display = 'none';
     if (statsSection) statsSection.style.display = 'none';
-    
+
     console.log('Calling loadAdminPackages()...');
     loadAdminPackages();
 }
@@ -723,16 +723,16 @@ function showDonationHistory() {
     const manageBtn = document.getElementById('manage-packages-btn');
     const historyBtn = document.getElementById('donation-history-btn');
     const statsBtn = document.getElementById('donation-stats-btn');
-    
+
     if (manageBtn) manageBtn.className = 'btn btn-outline-primary';
     if (historyBtn) historyBtn.className = 'btn btn-primary';
     if (statsBtn) statsBtn.className = 'btn btn-outline-primary';
-    
+
     // Show/hide sections
     document.getElementById('manage-packages-section').style.display = 'none';
     document.getElementById('donation-history-section').style.display = 'block';
     document.getElementById('donation-stats-section').style.display = 'none';
-    
+
     loadAllDonations();
 }
 
@@ -741,16 +741,16 @@ function showDonationStats() {
     const manageBtn = document.getElementById('manage-packages-btn');
     const historyBtn = document.getElementById('donation-history-btn');
     const statsBtn = document.getElementById('donation-stats-btn');
-    
+
     if (manageBtn) manageBtn.className = 'btn btn-outline-primary';
     if (historyBtn) historyBtn.className = 'btn btn-outline-primary';
     if (statsBtn) statsBtn.className = 'btn btn-primary';
-    
+
     // Show/hide sections
     document.getElementById('manage-packages-section').style.display = 'none';
     document.getElementById('donation-history-section').style.display = 'none';
     document.getElementById('donation-stats-section').style.display = 'block';
-    
+
     loadDonationStats();
 }
 
@@ -760,13 +760,13 @@ async function loadAdminPackages() {
     try {
         console.log('Making fetch request to /getAllDonationPackages...');
         // Add cache busting to ensure we get fresh data
-        const response = await fetch('/getAllDonationPackages?' + new Date().getTime());
+        const response = await apiFetch('/getAllDonationPackages?' + new Date().getTime());
         console.log('Response received:', response);
         console.log('Response status:', response.status);
-        
+
         const data = await response.json();
         console.log('Response data:', data);
-        
+
         if (data.success) {
             console.log('Packages loaded successfully:', data.packages.length, 'packages');
             console.log('Package IDs:', data.packages.map(p => p.id));
@@ -787,12 +787,12 @@ function displayAdminPackages(packages) {
     const container = document.getElementById('admin-packages-list');
     console.log('Container found:', !!container);
     console.log('Number of packages:', packages.length);
-    
+
     if (packages.length === 0) {
-        container.innerHTML = '<p class="text-muted">No donation packages found.</p>';
+        container.innerHTML = DOMPurify.sanitize('<p class="text-muted">No donation packages found.</p>');
         return;
     }
-    
+
     const packagesHTML = packages.map(pkg => {
         console.log('Rendering package:', pkg.name);
         return `
@@ -820,9 +820,9 @@ function displayAdminPackages(packages) {
         </div>
         `;
     }).join('');
-    
+
     console.log('Setting innerHTML with packages HTML');
-    container.innerHTML = packagesHTML;
+    container.innerHTML = DOMPurify.sanitize(packagesHTML);
     console.log('Packages should now be visible');
 }
 
@@ -844,9 +844,9 @@ function hidePackageForm() {
 // Edit package
 async function editPackage(packageId) {
     try {
-        const response = await fetch('/getAllDonationPackages');
+        const response = await apiFetch('/getAllDonationPackages');
         const data = await response.json();
-        
+
         if (data.success) {
             const pkg = data.packages.find(p => p.id === packageId);
             if (pkg) {
@@ -859,7 +859,7 @@ async function editPackage(packageId) {
                 document.getElementById('package_description').value = pkg.description;
                 document.getElementById('package_price').value = pkg.price;
                 document.getElementById('package_impact').value = pkg.impact_description || '';
-                
+
                 document.getElementById('package-form-section').style.display = 'block';
                 document.getElementById('package-form-section').scrollIntoView({ behavior: 'smooth' });
             }
@@ -877,10 +877,10 @@ async function savePackage() {
         showMessage('Admin access required', 'error');
         return;
     }
-    
+
     const editId = document.getElementById('package_edit_id').value;
     const isEdit = editId !== '';
-    
+
     const packageData = {
         package_id: document.getElementById('package_id').value.trim(),
         name: document.getElementById('package_name').value.trim(),
@@ -888,39 +888,39 @@ async function savePackage() {
         price: parseFloat(document.getElementById('package_price').value),
         impact_description: document.getElementById('package_impact').value.trim(),
         // Removed is_active - no longer using soft delete
-        adminEmail: currentUser.email
+
     };
-    
+
     // Validation
     if (!packageData.package_id || !packageData.name || !packageData.description || !packageData.price) {
         showMessage('Please fill in all required fields', 'error');
         return;
     }
-    
+
     if (packageData.price <= 0) {
         showMessage('Price must be greater than 0', 'error');
         return;
     }
-    
+
     try {
         let response;
         if (isEdit) {
             packageData.id = editId;
-            response = await fetch('/updateDonationPackage', {
+            response = await apiFetch('/updateDonationPackage', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(packageData)
             });
         } else {
-            response = await fetch('/createDonationPackage', {
+            response = await apiFetch('/createDonationPackage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(packageData)
             });
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             showMessage(data.message, 'success');
             hidePackageForm();
@@ -946,23 +946,23 @@ async function deletePackage(packageId) {
         showMessage('Admin access required', 'error');
         return;
     }
-    
+
     if (!confirm('Are you sure you want to delete this donation package? This action cannot be undone.')) {
         return;
     }
-    
+
     try {
         console.log('Attempting to delete package ID:', packageId);
-        const response = await fetch(`/deleteDonationPackage/${packageId}`, {
+        const response = await apiFetch(`/deleteDonationPackage/${packageId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminEmail: currentUser.email })
+            body: JSON.stringify({})
         });
-        
+
         console.log('Delete response status:', response.status);
         const data = await response.json();
         console.log('Delete response data:', data);
-        
+
         if (data.success) {
             showMessage('Package permanently deleted', 'success');
             // Immediate refresh - package should be gone from database
@@ -984,16 +984,16 @@ async function loadAllDonations() {
     console.log('=== Load All Donations ===');
     try {
         console.log('Making fetch request to /getAllDonations...');
-        const response = await fetch('/getAllDonations');
+        const response = await apiFetch('/getAllDonations');
         console.log('Response status:', response.status);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const responseText = await response.text();
         console.log('Raw response text:', responseText);
-        
+
         let data;
         try {
             data = JSON.parse(responseText);
@@ -1003,9 +1003,9 @@ async function loadAllDonations() {
             showMessage('Error: Server returned invalid response', 'error');
             return;
         }
-        
+
         console.log('Parsed response data:', data);
-        
+
         if (data.success) {
             console.log('Donations loaded successfully:', data.donations.length, 'donations');
             displayAllDonations(data.donations);
@@ -1022,21 +1022,21 @@ async function loadAllDonations() {
 // Display all donations in admin view
 function displayAllDonations(donations) {
     const container = document.getElementById('admin-donations-list');
-    
+
     if (donations.length === 0) {
-        container.innerHTML = '<p class="text-muted">No donations found.</p>';
+        container.innerHTML = DOMPurify.sanitize('<p class="text-muted">No donations found.</p>');
         return;
     }
-    
+
     const donationsHTML = donations.map(donation => {
         const donationDate = new Date(donation.created_at).toLocaleDateString();
         const donationTime = new Date(donation.created_at).toLocaleTimeString();
         const paymentInfo = donation.payment_method ? `**** ${donation.payment_method.cardLast4}` : 'N/A';
-        
-        const itemsHTML = donation.items.map(item => 
+
+        const itemsHTML = donation.items.map(item =>
             `<li>${item.quantity}x ${item.name} - RM ${(item.subtotal || item.price * item.quantity).toFixed(2)}</li>`
         ).join('');
-        
+
         return `
             <div class="card u-mb-md">
                 <div class="card__body">
@@ -1062,8 +1062,8 @@ function displayAllDonations(donations) {
             </div>
         `;
     }).join('');
-    
-    container.innerHTML = donationsHTML;
+
+    container.innerHTML = DOMPurify.sanitize(donationsHTML);
 }
 
 // Delete donation
@@ -1073,18 +1073,18 @@ async function deleteDonation(donationId) {
         showMessage('Admin access required', 'error');
         return;
     }
-    
+
     if (!confirm('Are you sure you want to delete this donation record? This action cannot be undone.')) {
         return;
     }
-    
+
     try {
-        const response = await fetch(`/deleteDonation/${donationId}`, {
+        const response = await apiFetch(`/deleteDonation/${donationId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminEmail: currentUser.email })
+            body: JSON.stringify({})
         });
-        
+
         const data = await response.json();
         if (data.success) {
             showMessage('Donation record deleted successfully', 'success');
@@ -1101,9 +1101,9 @@ async function deleteDonation(donationId) {
 // Load donation statistics
 async function loadDonationStats() {
     try {
-        const response = await fetch('/donationStats');
+        const response = await apiFetch('/donationStats');
         const data = await response.json();
-        
+
         if (data.success) {
             displayDonationStats(data.stats);
         } else {
@@ -1118,7 +1118,7 @@ async function loadDonationStats() {
 // Display donation statistics
 function displayDonationStats(stats) {
     const container = document.getElementById('admin-stats-content');
-    
+
     const recentDonationsHTML = stats.recentDonations.map(donation => {
         const date = new Date(donation.created_at).toLocaleDateString();
         return `
@@ -1130,7 +1130,7 @@ function displayDonationStats(stats) {
             </tr>
         `;
     }).join('');
-    
+
     const popularPackagesHTML = stats.popularPackages.map(pkg => `
         <tr>
             <td>${pkg.package_name}</td>
@@ -1138,7 +1138,7 @@ function displayDonationStats(stats) {
             <td>RM ${parseFloat(pkg.total_amount).toFixed(2)}</td>
         </tr>
     `).join('');
-    
+
     const statsHTML = `
         <div class="row">
             <div class="col-md-6">
@@ -1211,19 +1211,19 @@ function displayDonationStats(stats) {
             </div>
         </div>
     `;
-    
-    container.innerHTML = statsHTML;
+
+    container.innerHTML = DOMPurify.sanitize(statsHTML);
 }
 
 // Filter donations by date
 function filterDonations() {
     const fromDate = document.getElementById('filter-date-from').value;
     const toDate = document.getElementById('filter-date-to').value;
-    
+
     // For now, just reload all donations
     // In a production app, you'd send the filter params to the server
     loadAllDonations();
-    
+
     if (fromDate || toDate) {
         showMessage(`Filtering by date range: ${fromDate || 'beginning'} to ${toDate || 'end'}`, 'info');
     }
@@ -1245,13 +1245,13 @@ function showMessage(message, type) {
     messageDiv.style.right = '20px';
     messageDiv.style.zIndex = '9999';
     messageDiv.style.minWidth = '300px';
-    messageDiv.innerHTML = `
+    messageDiv.innerHTML = DOMPurify.sanitize(`
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
+    `);
+
     document.body.appendChild(messageDiv);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
         if (messageDiv.parentNode) {
