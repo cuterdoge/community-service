@@ -21,7 +21,8 @@
     "express": "^5.1.0",
     "mysql2": "^3.15.3",
     "railway": "^2.0.17",
-    "helmet": "^7.1.0"
+    "helmet": "^7.1.0",
+    "express-validator": "^7.0.1"
   },
   "description": ""
 }

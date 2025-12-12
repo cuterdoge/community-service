@@ -125,6 +125,9 @@ Rollout plan
 - Verify secure cookies behind proxy in staging; then enable HSTS
 - Plan DB TLS tightening when CA is available
 
+Dependencies added
+- express-validator ^7.0.1 (Phase 5)
+
 Notes
 - We will avoid breaking the current client flows by initially keeping CSP permissive ('unsafe-inline') and tightening after refactors.
 - CORS will be restricted to 'self' and the production domain. Local dev origins will be allowed in development only.
