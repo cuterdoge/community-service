@@ -45,10 +45,10 @@ Phase 2: Authorization
 Phase 3: Security headers and CSP
 - Helmet: enable defaults (frameguard, noSniff, hidePoweredBy, etc.)
 - HSTS: enable after HTTPS-only behavior is confirmed in prod (toggle via ENABLE_HSTS=true in environment once verified)
-- Initial CSP (permissive to match current frontend):
+- Initial CSP (permissive + CDNs):
   - default-src 'self'
-  - script-src 'self' 'unsafe-inline'
-  - style-src 'self' 'unsafe-inline'
+  - script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com
+  - style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net
   - img-src 'self' data:
   - connect-src 'self'
 - Plan to tighten CSP once inline usage is reduced
@@ -92,13 +92,13 @@ Phase 6: Client-side XSS mitigation
   - Refactor to favor DOM APIs over innerHTML where feasible
 
 Phase 7: Rate limiting
-- Global limiter: 100 requests/min per IP
-- Login limiter: 5 attempts/min per IP
+- Global limiter: 1000 requests/15min per IP (Relaxed from 100/min)
+- Login limiter: 20 attempts/min per IP (Relaxed from 5/min)
 - Optionally add modest limits to admin routes
 - Implemented:
   - Added `express-rate-limit` middleware
-  - Global limiter (100 req/min) applied to all routes
-  - Login limiter (5 req/min) applied to `/login` endpoint
+  - Global limiter (1000 req/15min) applied to all routes
+  - Login limiter (20 req/min) applied to `/login` endpoint
 
 Phase 8: HTTPS enforcement
 - Rely on Render/Railway for TLS termination

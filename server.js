@@ -26,8 +26,8 @@ app.use(helmet({
         useDefaults: false,
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
             imgSrc: ["'self'", 'data:'],
             connectSrc: ["'self'"]
         }
@@ -54,19 +54,19 @@ app.use(cors({
 }));
 
 // Rate Limiters (Phase 7)
-// Global limiter: 100 requests per minute
+// Global limiter: 1000 requests per 15 minutes
 const globalLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    limit: 100,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 1000,
     standardHeaders: true,
     legacyHeaders: false
 });
 app.use(globalLimiter);
 
-// Login limiter: 5 attempts per minute
+// Login limiter: 20 attempts per minute
 const loginLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
-    limit: 5,
+    limit: 20,
     message: { success: false, message: 'Too many login attempts, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false
