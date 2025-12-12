@@ -36,11 +36,11 @@ app.use(helmet({
 // CORS with credentials support (Phase 4)
 const isProd = process.env.NODE_ENV === 'production';
 const allowedOrigins = isProd
-  ? ['https://community-service-ahp0.onrender.com']
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+    ? ['https://community-service-ahp0.onrender.com']
+    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 app.use(cors({
-    origin: function(origin, callback) {
+    origin: function (origin, callback) {
         // Allow requests with no origin (same-origin, curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) {
@@ -118,18 +118,19 @@ let db;
 async function connectDB() {
     const maxRetries = 3;
     const retryDelay = 3000; // 3 seconds
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`Database connection attempt ${attempt}/${maxRetries}...`);
             db = await mysql.createConnection(dbConfig);
             console.log('Connected to MySQL database with SSL');
-            
+
             // Test the connection
             await db.ping();
             console.log('Database connection test successful');
-            
+
             // Keep connection alive with periodic pings
+            /*
             setInterval(async () => {
                 try {
                     await db.ping();
@@ -144,7 +145,8 @@ async function connectDB() {
                     }
                 }
             }, 30000); // Ping every 30 seconds
-            
+            */
+
             // Create tables if connected successfully
             try {
                 await createTables();
@@ -156,14 +158,14 @@ async function connectDB() {
             return; // Success, exit the retry loop
         } catch (error) {
             console.error(`Database connection attempt ${attempt} failed:`, error.message);
-            
+
             if (attempt === maxRetries) {
                 console.error('All database connection attempts failed. Server will continue but database features will be unavailable.');
                 // Don't throw error, let server start without database
                 return;
             }
-            
-            console.log(`Retrying in ${retryDelay/1000} seconds...`);
+
+            console.log(`Retrying in ${retryDelay / 1000} seconds...`);
             await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
     }
@@ -174,7 +176,7 @@ async function createTables() {
         console.log('Database not connected, skipping table creation');
         return;
     }
-    
+
     // Create tables if not exist
     await db.query(`
         CREATE TABLE IF NOT EXISTS volunteers (
@@ -261,8 +263,8 @@ async function createTables() {
     // Initialize slots if empty
     const [rows] = await db.query('SELECT COUNT(*) AS count FROM slots');
     if (rows[0].count === 0) {
-        const days = ['Mon','Tue','Wed','Thurs','Fri','Sat','Sun'];
-        const times = ['9am-12pm','1pm-3pm','4pm-6pm'];
+        const days = ['Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
+        const times = ['9am-12pm', '1pm-3pm', '4pm-6pm'];
         for (const day of days) {
             for (const time of times) {
                 await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,NULL)', [`${day}-${time}`]);
@@ -395,40 +397,40 @@ app.post('/registerVolunteer', withValidation([
     body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
     body('phone').optional().isLength({ min: 3, max: 20 }).withMessage('Phone length 3-20'),
     body('password').isLength({ min: 12 }).withMessage('Password must be at least 12 characters')
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {name,email,phone,password} = req.body;
-        if(!name || !email || !phone || !password) return res.json({success:false,message:'Missing fields'});
-        
+        const { name, email, phone, password } = req.body;
+        if (!name || !email || !phone || !password) return res.json({ success: false, message: 'Missing fields' });
+
         // Password validation
-        if(password.length < 6) {
-            return res.json({success:false,message:'Password must be at least 6 characters long'});
+        if (password.length < 6) {
+            return res.json({ success: false, message: 'Password must be at least 6 characters long' });
         }
-        
+
         // Check if database is connected
         if (!db) {
             console.error('Database not connected');
-            return res.status(503).json({success:false,message:'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
-        
+
         // Check if email already exists
-        const [existing] = await db.query('SELECT * FROM volunteers WHERE email=?',[email]);
-        if(existing.length > 0) {
-            return res.json({success:false,message:'Email already registered'});
+        const [existing] = await db.query('SELECT * FROM volunteers WHERE email=?', [email]);
+        if (existing.length > 0) {
+            return res.json({ success: false, message: 'Email already registered' });
         }
-        
+
         // Hash password
         const saltRounds = 10;
         const password_hash = await bcrypt.hash(password, saltRounds);
-        
-        await db.query('INSERT INTO volunteers (name,email,phone,password_hash) VALUES (?,?,?,?)',[name,email,phone,password_hash]);
-        res.json({success:true,message:'Registration successful'});
-    } catch(err){
+
+        await db.query('INSERT INTO volunteers (name,email,phone,password_hash) VALUES (?,?,?,?)', [name, email, phone, password_hash]);
+        res.json({ success: true, message: 'Registration successful' });
+    } catch (err) {
         console.error('Volunteer registration error:', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ENOTFOUND') {
-            res.status(503).json({success:false,message:'Database connection lost'});
+            res.status(503).json({ success: false, message: 'Database connection lost' });
         } else {
-            res.status(500).json({success:false,message:'Database error'});
+            res.status(500).json({ success: false, message: 'Database error' });
         }
     }
 });
@@ -437,11 +439,11 @@ app.post('/registerVolunteer', withValidation([
 app.post('/login', withValidation([
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 1 }).withMessage('Password required')
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {email,password} = req.body;
-        if(!email || !password) return res.json({success:false,message:'Email and password are required'});
-        
+        const { email, password } = req.body;
+        if (!email || !password) return res.json({ success: false, message: 'Email and password are required' });
+
         // Check if this is admin login (works without database)
         if (email === config.app.admin.email) {
             console.log('Admin login attempt for:', email);
@@ -464,30 +466,30 @@ app.post('/login', withValidation([
                     });
                 });
             } else {
-                return res.json({success:false,message:'Invalid email or password'});
+                return res.json({ success: false, message: 'Invalid email or password' });
             }
         }
-        
+
         // For regular users, check if database is connected
         if (!db) {
             console.error('Database not connected - regular user login unavailable');
-            return res.status(503).json({success:false,message:'Database connection unavailable. Admin login still works.'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable. Admin login still works.' });
         }
-        
+
         // Find regular user by email
-        const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?',[email]);
-        if(rows.length === 0) {
-            return res.json({success:false,message:'Invalid email or password'});
+        const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?', [email]);
+        if (rows.length === 0) {
+            return res.json({ success: false, message: 'Invalid email or password' });
         }
-        
+
         const user = rows[0];
-        
+
         // Verify password
         const passwordMatch = await bcrypt.compare(password, user.password_hash);
-        if(!passwordMatch) {
-            return res.json({success:false,message:'Invalid email or password'});
+        if (!passwordMatch) {
+            return res.json({ success: false, message: 'Invalid email or password' });
         }
-        
+
         // Set session
         return req.session.regenerate(async (err) => {
             if (err) {
@@ -496,7 +498,7 @@ app.post('/login', withValidation([
             }
             req.session.user = { id: user.id, email: user.email, is_admin: false };
             return res.json({
-                success:true,
+                success: true,
                 user: {
                     id: user.id,
                     name: user.name,
@@ -506,29 +508,29 @@ app.post('/login', withValidation([
                 }
             });
         });
-    } catch(err){
+    } catch (err) {
         console.error('Login error:', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ENOTFOUND') {
-            res.status(503).json({success:false,message:'Database connection lost'});
+            res.status(503).json({ success: false, message: 'Database connection lost' });
         } else {
-            res.status(500).json({success:false,message:'Database error'});
+            res.status(500).json({ success: false, message: 'Database error' });
         }
     }
 });
 
 // --- Get timetable ---
-app.get('/timetable', async (req,res)=>{
-    try{
+app.get('/timetable', async (req, res) => {
+    try {
         const [slots] = await db.query('SELECT slot, booked_by FROM slots');
         const [dates] = await db.query('SELECT week_start_date FROM schedule_dates ORDER BY created_at DESC LIMIT 1');
-        
+
         res.json({
             slots: slots,
             weekStartDate: dates.length > 0 ? dates[0].week_start_date : null
         });
-    }catch(err){
+    } catch (err) {
         console.error(err);
-        res.json({slots: [], weekStartDate: null});
+        res.json({ slots: [], weekStartDate: null });
     }
 });
 
@@ -537,30 +539,30 @@ app.post('/book', withValidation([
     body('email').isEmail().normalizeEmail(),
     body('name').optional().trim().isLength({ max: 100 }),
     body('slot').isString().isLength({ min: 3, max: 50 })
-]), async (req,res)=>{
-    try{
-        const {email, name, slot} = req.body;
-        if(!email || !slot) return res.json({success:false,message:'Missing fields'});
+]), async (req, res) => {
+    try {
+        const { email, name, slot } = req.body;
+        if (!email || !slot) return res.json({ success: false, message: 'Missing fields' });
 
         // Check if slot already exists
-        const [existing] = await db.query('SELECT * FROM slots WHERE slot=?',[slot]);
-        
-        if(existing.length === 0) {
+        const [existing] = await db.query('SELECT * FROM slots WHERE slot=?', [slot]);
+
+        if (existing.length === 0) {
             // Create new slot if it doesn't exist
-            await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,?)',[slot, email]);
-            res.json({success:true});
+            await db.query('INSERT INTO slots (slot, booked_by) VALUES (?,?)', [slot, email]);
+            res.json({ success: true });
         } else {
             // Update existing slot
             const bookedBy = existing[0].booked_by;
-            if(bookedBy && bookedBy!==email) return res.json({success:false,message:'Slot already booked by another user'});
+            if (bookedBy && bookedBy !== email) return res.json({ success: false, message: 'Slot already booked by another user' });
 
-            const newValue = bookedBy===email ? null : email;
-            await db.query('UPDATE slots SET booked_by=? WHERE slot=?',[newValue,slot]);
-            res.json({success:true});
+            const newValue = bookedBy === email ? null : email;
+            await db.query('UPDATE slots SET booked_by=? WHERE slot=?', [newValue, slot]);
+            res.json({ success: true });
         }
-    }catch(err){
+    } catch (err) {
         console.error('Booking error:', err);
-        res.json({success:false,message:'Database error'});
+        res.json({ success: false, message: 'Database error' });
     }
 });
 
@@ -572,59 +574,59 @@ app.post('/updateProfile', withValidation([
     body('phone').trim().isLength({ min: 3, max: 20 }),
     body('currentPassword').isLength({ min: 1 }),
     body('newPassword').optional({ nullable: true }).isLength({ min: 12 }).withMessage('New password must be at least 12 characters')
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {email, name, phone, currentPassword, newPassword} = req.body;
-        if(!email || !name || !phone || !currentPassword) {
-            return res.json({success:false,message:'Missing required fields'});
+        const { email, name, phone, currentPassword, newPassword } = req.body;
+        if (!email || !name || !phone || !currentPassword) {
+            return res.json({ success: false, message: 'Missing required fields' });
         }
-        
+
         // Get user from database
-        const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?',[email]);
-        if(rows.length === 0) {
-            return res.json({success:false,message:'User not found'});
+        const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?', [email]);
+        if (rows.length === 0) {
+            return res.json({ success: false, message: 'User not found' });
         }
-        
+
         const user = rows[0];
-        
+
         // Verify current password
         const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
-        if(!passwordMatch) {
-            return res.json({success:false,message:'Current password is incorrect'});
+        if (!passwordMatch) {
+            return res.json({ success: false, message: 'Current password is incorrect' });
         }
-        
+
         // Update user data
         let updateQuery = 'UPDATE volunteers SET name=?, phone=?';
         let updateParams = [name, phone];
-        
+
         // If new password provided, hash it and include in update
-        if(newPassword) {
+        if (newPassword) {
             const saltRounds = 10;
             const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
             updateQuery += ', password_hash=?';
             updateParams.push(newPasswordHash);
         }
-        
+
         updateQuery += ' WHERE email=?';
         updateParams.push(email);
-        
+
         await db.query(updateQuery, updateParams);
-        
-        res.json({success:true,message:'Profile updated successfully'});
-    } catch(err){
+
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (err) {
         console.error('Profile update error:', err);
-        res.status(500).json({success:false,message:'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // --- Admin reset timetable ---
-app.post('/reset', requireAdmin, async (req,res)=>{
-    try{
+app.post('/reset', requireAdmin, async (req, res) => {
+    try {
         await db.query('UPDATE slots SET booked_by=NULL');
-        res.json({success:true});
-    }catch(err){
+        res.json({ success: true });
+    } catch (err) {
         console.error(err);
-        res.json({success:false});
+        res.json({ success: false });
     }
 });
 
@@ -644,16 +646,16 @@ app.post('/logout', (req, res) => {
 // --- Check if date is available for volunteering ---
 app.post('/checkAvailability', withValidation([
     body('date').optional().isISO8601().withMessage('date must be ISO8601 (YYYY-MM-DD)')
-]), async (req,res)=>{
-    try{
+]), async (req, res) => {
+    try {
         const { date } = req.body;
-        if(!date) return res.json({available:true}); // Default to available if no date provided
-        
-        const [rows] = await db.query('SELECT * FROM unavailable_dates WHERE date=?',[date]);
-        res.json({available: rows.length === 0});
-    }catch(err){
+        if (!date) return res.json({ available: true }); // Default to available if no date provided
+
+        const [rows] = await db.query('SELECT * FROM unavailable_dates WHERE date=?', [date]);
+        res.json({ available: rows.length === 0 });
+    } catch (err) {
         console.error('Availability check error:', err);
-        res.json({available:true}); // Default to available on error
+        res.json({ available: true }); // Default to available on error
     }
 });
 
@@ -668,8 +670,8 @@ function requireAdmin(req, res, next) {
 }
 
 // --- Get all bookings for admin ---
-app.get('/allBookings', requireAdmin, async (req,res)=>{
-    try{
+app.get('/allBookings', requireAdmin, async (req, res) => {
+    try {
         const [bookings] = await db.query(`
             SELECT s.slot, s.booked_by, 
                    COALESCE(v.name, 'Unknown User') as name 
@@ -679,113 +681,113 @@ app.get('/allBookings', requireAdmin, async (req,res)=>{
             ORDER BY s.slot
         `);
         console.log('Found bookings:', bookings);
-        res.json({bookings: bookings});
-    }catch(err){
+        res.json({ bookings: bookings });
+    } catch (err) {
         console.error('Get bookings error:', err);
-        res.json({bookings: []});
+        res.json({ bookings: [] });
     }
 });
 
 // --- Get user's bookings ---
 app.post('/myBookings', withValidation([
     body('email').isEmail().normalizeEmail()
-]), async (req,res)=>{
-    try{
+]), async (req, res) => {
+    try {
         const { email } = req.body;
-        if(!email) return res.json({bookings: []});
-        
+        if (!email) return res.json({ bookings: [] });
+
         const [bookings] = await db.query(`
             SELECT slot, booked_by 
             FROM slots 
             WHERE booked_by = ? 
             ORDER BY slot
         `, [email]);
-        res.json({bookings: bookings});
-    }catch(err){
+        res.json({ bookings: bookings });
+    } catch (err) {
         console.error('Get user bookings error:', err);
-        res.json({bookings: []});
+        res.json({ bookings: [] });
     }
 });
 
 // --- Get unavailable dates ---
-app.get('/getUnavailableDates', async (req,res)=>{
-    try{
+app.get('/getUnavailableDates', async (req, res) => {
+    try {
         const [dates] = await db.query('SELECT DATE_FORMAT(date, "%Y-%m-%d") as date FROM unavailable_dates ORDER BY date');
-        res.json({dates: dates.map(row => row.date)});
-    }catch(err){
+        res.json({ dates: dates.map(row => row.date) });
+    } catch (err) {
         console.error('Get unavailable dates error:', err);
-        res.json({dates: []});
+        res.json({ dates: [] });
     }
 });
 
 // --- Set unavailable date (admin only) ---
 app.post('/setUnavailableDate', requireAdmin, withValidation([
     body('date').isISO8601().withMessage('date must be ISO8601 (YYYY-MM-DD)')
-]), async (req,res)=>{
-    try{
+]), async (req, res) => {
+    try {
         const { date } = req.body;
         console.log('Set unavailable date request:', { date });
-        
-        
-        
+
+
+
         if (!date) {
             console.log('Date missing');
-            return res.json({success:false,message:'Date is required'});
+            return res.json({ success: false, message: 'Date is required' });
         }
-        
+
         // Insert unavailable date (ignore if already exists)
         console.log('Inserting unavailable date:', date);
         await db.query('INSERT IGNORE INTO unavailable_dates (date) VALUES (?)', [date]);
         console.log('Successfully inserted unavailable date');
-        res.json({success:true});
-    }catch(err){
+        res.json({ success: true });
+    } catch (err) {
         console.error('Set unavailable date error:', err);
-        res.json({success:false,message:'Database error: ' + err.message});
+        res.json({ success: false, message: 'Database error: ' + err.message });
     }
 });
 
 // --- Remove unavailable date (admin only) ---
 app.post('/removeUnavailableDate', requireAdmin, withValidation([
     body('date').isISO8601().withMessage('date must be ISO8601 (YYYY-MM-DD)')
-]), async (req,res)=>{
-    try{
+]), async (req, res) => {
+    try {
         const { date } = req.body;
         console.log('Remove unavailable date request:', { date });
-        
-        
-        
+
+
+
         if (!date) {
             console.log('Date missing for remove');
-            return res.json({success:false,message:'Date is required'});
+            return res.json({ success: false, message: 'Date is required' });
         }
-        
+
         console.log('Attempting to delete unavailable date:', date);
         const [result] = await db.query('DELETE FROM unavailable_dates WHERE date=?', [date]);
         console.log('Delete result:', result);
         console.log('Rows affected:', result.affectedRows);
-        
-        res.json({success:true, message: `Removed ${result.affectedRows} date(s)`});
-    }catch(err){
+
+        res.json({ success: true, message: `Removed ${result.affectedRows} date(s)` });
+    } catch (err) {
         console.error('Remove unavailable date error:', err);
-        res.json({success:false,message:'Database error: ' + err.message});
+        res.json({ success: false, message: 'Database error: ' + err.message });
     }
 });
 
 // --- Get donation packages (only existing packages since we use hard delete) ---
-app.get('/donationPackages', async (req,res)=>{
+app.get('/donationPackages', async (req, res) => {
     // Disable caching so clients always get fresh data
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     res.set('Surrogate-Control', 'no-store');
-    try{
+    try {
         // No need to filter by is_active since hard delete removes packages completely
         const [packages] = await db.query('SELECT * FROM donation_packages ORDER BY price ASC');
         console.log('Retrieved packages for public view:', packages.length);
-        res.json({success: true, packages: packages});
-    }catch(err){
+        res.json({ success: true, packages: packages });
+    } catch (err) {
         console.error('Get donation packages error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
@@ -804,17 +806,17 @@ app.post('/processDonation', withValidation([
     body('paymentInfo.cardLast4').isLength({ min: 4, max: 4 }).isNumeric(),
     body('paymentInfo.expiryMonth').isInt({ min: 1, max: 12 }),
     body('paymentInfo.expiryYear').isInt({ min: 2000, max: 2100 })
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {donationData, donorInfo, paymentInfo} = req.body;
-        
+        const { donationData, donorInfo, paymentInfo } = req.body;
+
         if (!donationData || !donorInfo || !paymentInfo) {
-            return res.json({success: false, message: 'Missing required data'});
+            return res.json({ success: false, message: 'Missing required data' });
         }
 
         // Check if database is connected
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         // Start transaction
@@ -876,21 +878,21 @@ app.post('/processDonation', withValidation([
             throw error;
         }
 
-    } catch(err) {
+    } catch (err) {
         console.error('Process donation error:', err);
-        res.status(500).json({success: false, message: 'Failed to process donation'});
+        res.status(500).json({ success: false, message: 'Failed to process donation' });
     }
 });
 
 // --- Get user donations ---
 app.post('/getUserDonations', withValidation([
     body('email').isEmail().normalizeEmail()
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {email} = req.body;
-        
+        const { email } = req.body;
+
         if (!email) {
-            return res.json({success: false, message: 'Email is required'});
+            return res.json({ success: false, message: 'Email is required' });
         }
 
         // Get donations with items
@@ -924,20 +926,20 @@ app.post('/getUserDonations', withValidation([
             items: donation.items ? donation.items.split('|||').map(item => JSON.parse(item)) : []
         }));
 
-        res.json({success: true, donations: processedDonations});
+        res.json({ success: true, donations: processedDonations });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Get user donations error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // --- Get donation statistics (admin) ---
-app.get('/donationStats', requireAdmin, async (req,res)=>{
+app.get('/donationStats', requireAdmin, async (req, res) => {
     try {
         // Total donations
         const [totalResult] = await db.query('SELECT COUNT(*) as count, SUM(total_amount) as total FROM donations WHERE status = "completed"');
-        
+
         // Recent donations
         const [recentDonations] = await db.query(`
             SELECT d.transaction_id, d.donor_name, d.total_amount, d.created_at
@@ -971,18 +973,18 @@ app.get('/donationStats', requireAdmin, async (req,res)=>{
             }
         });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Get donation stats error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // --- Get all donations for admin ---
-app.get('/getAllDonations', requireAdmin, async (req,res)=>{
+app.get('/getAllDonations', requireAdmin, async (req, res) => {
     try {
         // Check if database is connected
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         const [donations] = await db.query(`
@@ -1018,16 +1020,16 @@ app.get('/getAllDonations', requireAdmin, async (req,res)=>{
             };
         });
 
-        res.json({success: true, donations: processedDonations});
+        res.json({ success: true, donations: processedDonations });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Get all donations error:', err);
-        res.status(500).json({success: false, message: 'Database error: ' + err.message});
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
     }
 });
 
 // --- Get all donation packages (including inactive) for admin ---
-app.get('/getAllDonationPackages', requireAdmin, async (req,res)=>{
+app.get('/getAllDonationPackages', requireAdmin, async (req, res) => {
     // Disable caching for admin list
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
@@ -1035,15 +1037,15 @@ app.get('/getAllDonationPackages', requireAdmin, async (req,res)=>{
     res.set('Surrogate-Control', 'no-store');
     try {
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         const [packages] = await db.query('SELECT * FROM donation_packages ORDER BY created_at DESC');
-        res.json({success: true, packages: packages});
+        res.json({ success: true, packages: packages });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Get all donation packages error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
@@ -1055,22 +1057,22 @@ app.post('/createDonationPackage', requireAdmin, withValidation([
     body('price').isFloat({ gt: 0 }),
     body('impact_description').optional().isLength({ max: 4000 }),
     body('icon').optional().isLength({ max: 10 })
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {package_id, name, description, price, impact_description, icon} = req.body;
-        
+        const { package_id, name, description, price, impact_description, icon } = req.body;
+
         if (!package_id || !name || !description || !price) {
-            return res.json({success: false, message: 'Missing required fields'});
+            return res.json({ success: false, message: 'Missing required fields' });
         }
 
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         // Check if package_id already exists
         const [existing] = await db.query('SELECT * FROM donation_packages WHERE package_id = ?', [package_id]);
         if (existing.length > 0) {
-            return res.json({success: false, message: 'Package ID already exists'});
+            return res.json({ success: false, message: 'Package ID already exists' });
         }
 
         await db.query(`
@@ -1078,11 +1080,11 @@ app.post('/createDonationPackage', requireAdmin, withValidation([
             VALUES (?, ?, ?, ?, ?, ?)
         `, [package_id, name, description, parseFloat(price), impact_description || '', icon || '📦']);
 
-        res.json({success: true, message: 'Donation package created successfully'});
+        res.json({ success: true, message: 'Donation package created successfully' });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Create donation package error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
@@ -1094,16 +1096,16 @@ app.put('/updateDonationPackage', requireAdmin, withValidation([
     body('price').isFloat({ gt: 0 }),
     body('impact_description').optional().isLength({ max: 4000 }),
     body('icon').optional().isLength({ max: 10 })
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {id, name, description, price, impact_description, icon} = req.body;
-        
+        const { id, name, description, price, impact_description, icon } = req.body;
+
         if (!id || !name || !description || !price) {
-            return res.json({success: false, message: 'Missing required fields'});
+            return res.json({ success: false, message: 'Missing required fields' });
         }
 
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         const [result] = await db.query(`
@@ -1113,38 +1115,38 @@ app.put('/updateDonationPackage', requireAdmin, withValidation([
         `, [name, description, parseFloat(price), impact_description || '', icon || '📦', id]);
 
         if (result.affectedRows === 0) {
-            return res.json({success: false, message: 'Package not found'});
+            return res.json({ success: false, message: 'Package not found' });
         }
 
-        res.json({success: true, message: 'Donation package updated successfully'});
+        res.json({ success: true, message: 'Donation package updated successfully' });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Update donation package error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // --- Delete donation package (admin) - TRUE HARD DELETE ---
 app.delete('/deleteDonationPackage/:id', requireAdmin, withValidation([
     param('id').isInt({ gt: 0 }).toInt()
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         console.log('DELETE request received for package ID:', id);
-        
-        
-        
+
+
+
 
         if (!db) {
             console.log('Database not connected');
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         // Check if package exists first
         const [existingPackage] = await db.query('SELECT * FROM donation_packages WHERE id = ?', [id]);
         if (existingPackage.length === 0) {
             console.log('Package not found with ID:', id);
-            return res.json({success: false, message: 'Package not found'});
+            return res.json({ success: false, message: 'Package not found' });
         }
 
         console.log('Found package to delete:', existingPackage[0].name);
@@ -1155,25 +1157,25 @@ app.delete('/deleteDonationPackage/:id', requireAdmin, withValidation([
         console.log('Delete result - affected rows:', result.affectedRows);
 
         if (result.affectedRows === 0) {
-            return res.json({success: false, message: 'Failed to delete package'});
+            return res.json({ success: false, message: 'Failed to delete package' });
         }
 
         console.log('Package successfully deleted from database');
-        res.json({success: true, message: 'Donation package permanently deleted'});
+        res.json({ success: true, message: 'Donation package permanently deleted' });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Delete donation package error:', err);
-        res.status(500).json({success: false, message: 'Database error: ' + err.message});
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
     }
 });
 
 // --- Events API endpoints ---
 
 // Get all events
-app.get('/events', async (req,res)=>{
+app.get('/events', async (req, res) => {
     try {
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         const [events] = await db.query(`
@@ -1182,11 +1184,11 @@ app.get('/events', async (req,res)=>{
             ORDER BY date ASC
         `);
 
-        res.json({success: true, events: events});
+        res.json({ success: true, events: events });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Get events error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
@@ -1198,22 +1200,22 @@ app.post('/events', requireAdmin, withValidation([
     body('date').isISO8601(),
     body('location').trim().isLength({ min: 1, max: 200 }),
     body('poster').optional().isString()
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {id, title, description, date, location, poster} = req.body;
-        
+        const { id, title, description, date, location, poster } = req.body;
+
         if (!id || !title || !description || !date || !location) {
-            return res.json({success: false, message: 'Missing required fields'});
+            return res.json({ success: false, message: 'Missing required fields' });
         }
 
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         // Check if event ID already exists
         const [existing] = await db.query('SELECT * FROM events WHERE id = ?', [id]);
         if (existing.length > 0) {
-            return res.json({success: false, message: 'Event ID already exists'});
+            return res.json({ success: false, message: 'Event ID already exists' });
         }
 
         await db.query(`
@@ -1221,11 +1223,11 @@ app.post('/events', requireAdmin, withValidation([
             VALUES (?, ?, ?, ?, ?, ?, TRUE, 'admin')
         `, [id, title, description, date, location, poster]);
 
-        res.json({success: true, message: 'Event created successfully'});
+        res.json({ success: true, message: 'Event created successfully' });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Create event error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
@@ -1237,17 +1239,17 @@ app.put('/events/:id', requireAdmin, withValidation([
     body('date').isISO8601(),
     body('location').trim().isLength({ min: 1, max: 200 }),
     body('poster').optional().isString()
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {id} = req.params;
-        const {title, description, date, location, poster} = req.body;
-        
+        const { id } = req.params;
+        const { title, description, date, location, poster } = req.body;
+
         if (!title || !description || !date || !location) {
-            return res.json({success: false, message: 'Missing required fields'});
+            return res.json({ success: false, message: 'Missing required fields' });
         }
 
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         const [result] = await db.query(`
@@ -1257,49 +1259,49 @@ app.put('/events/:id', requireAdmin, withValidation([
         `, [title, description, date, location, poster, id]);
 
         if (result.affectedRows === 0) {
-            return res.json({success: false, message: 'Event not found'});
+            return res.json({ success: false, message: 'Event not found' });
         }
 
-        res.json({success: true, message: 'Event updated successfully'});
+        res.json({ success: true, message: 'Event updated successfully' });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Update event error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // Delete event (admin only)
 app.delete('/events/:id', requireAdmin, withValidation([
     param('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 })
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         const [result] = await db.query('DELETE FROM events WHERE id = ?', [id]);
 
         if (result.affectedRows === 0) {
-            return res.json({success: false, message: 'Event not found'});
+            return res.json({ success: false, message: 'Event not found' });
         }
 
-        res.json({success: true, message: 'Event deleted successfully'});
+        res.json({ success: true, message: 'Event deleted successfully' });
 
-    } catch(err) {
+    } catch (err) {
         console.error('Delete event error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // --- Delete donation record (admin) ---
 app.delete('/deleteDonation/:id', requireAdmin, withValidation([
     param('id').isInt({ gt: 0 }).toInt()
-]), async (req,res)=>{
+]), async (req, res) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
         if (!db) {
-            return res.status(503).json({success: false, message: 'Database connection unavailable'});
+            return res.status(503).json({ success: false, message: 'Database connection unavailable' });
         }
 
         // Start transaction to delete donation and its items
@@ -1308,53 +1310,53 @@ app.delete('/deleteDonation/:id', requireAdmin, withValidation([
         try {
             // Delete donation items first (foreign key constraint)
             await db.query('DELETE FROM donation_items WHERE donation_id = ?', [id]);
-            
+
             // Delete donation record
             const [result] = await db.query('DELETE FROM donations WHERE id = ?', [id]);
 
             if (result.affectedRows === 0) {
                 await db.rollback();
-                return res.json({success: false, message: 'Donation not found'});
+                return res.json({ success: false, message: 'Donation not found' });
             }
 
             await db.commit();
-            res.json({success: true, message: 'Donation record deleted successfully'});
+            res.json({ success: true, message: 'Donation record deleted successfully' });
 
         } catch (error) {
             await db.rollback();
             throw error;
         }
 
-    } catch(err) {
+    } catch (err) {
         console.error('Delete donation error:', err);
-        res.status(500).json({success: false, message: 'Database error'});
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
 // --- Debug endpoint ---
-app.get('/debug', async (req,res)=>{
-    try{
+app.get('/debug', async (req, res) => {
+    try {
         if (!db) {
-            return res.json({error: 'Database not connected'});
+            return res.json({ error: 'Database not connected' });
         }
 
         // Test connection and transaction capability
         const [testQuery] = await db.query('SELECT 1 as test, NOW() as timestamp');
-        
+
         // Test transaction support
         await db.beginTransaction();
         const [transactionTest] = await db.query('SELECT 2 as transaction_test');
         await db.rollback();
-        
+
         res.json({
             success: true,
             connectionActive: true,
             transactionSupport: true,
             timestamp: testQuery[0].timestamp
         });
-    }catch(err){
+    } catch (err) {
         console.error('Debug error:', err);
-        res.json({error: err.message});
+        res.json({ error: err.message });
     }
 });
 
