@@ -760,7 +760,7 @@ async function loadAdminPackages() {
     try {
         console.log('Making fetch request to /getAllDonationPackages...');
         // Add cache busting to ensure we get fresh data
-        const response = await fetch('/getAllDonationPackages?' + new Date().getTime());
+        const response = await apiFetch('/getAllDonationPackages?' + new Date().getTime());
         console.log('Response received:', response);
         console.log('Response status:', response.status);
         
@@ -844,7 +844,7 @@ function hidePackageForm() {
 // Edit package
 async function editPackage(packageId) {
     try {
-        const response = await fetch('/getAllDonationPackages');
+        const response = await apiFetch('/getAllDonationPackages');
         const data = await response.json();
         
         if (data.success) {
@@ -906,13 +906,13 @@ async function savePackage() {
         let response;
         if (isEdit) {
             packageData.id = editId;
-            response = await fetch('/updateDonationPackage', {
+            response = await apiFetch('/updateDonationPackage', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(packageData)
             });
         } else {
-            response = await fetch('/createDonationPackage', {
+            response = await apiFetch('/createDonationPackage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(packageData)
@@ -953,7 +953,7 @@ async function deletePackage(packageId) {
     
     try {
         console.log('Attempting to delete package ID:', packageId);
-        const response = await fetch(`/deleteDonationPackage/${packageId}`, {
+        const response = await apiFetch(`/deleteDonationPackage/${packageId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ adminEmail: currentUser.email })
@@ -984,7 +984,7 @@ async function loadAllDonations() {
     console.log('=== Load All Donations ===');
     try {
         console.log('Making fetch request to /getAllDonations...');
-        const response = await fetch('/getAllDonations');
+        const response = await apiFetch('/getAllDonations');
         console.log('Response status:', response.status);
         
         if (!response.ok) {
@@ -1079,7 +1079,7 @@ async function deleteDonation(donationId) {
     }
     
     try {
-        const response = await fetch(`/deleteDonation/${donationId}`, {
+        const response = await apiFetch(`/deleteDonation/${donationId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ adminEmail: currentUser.email })
@@ -1101,7 +1101,7 @@ async function deleteDonation(donationId) {
 // Load donation statistics
 async function loadDonationStats() {
     try {
-        const response = await fetch('/donationStats');
+        const response = await apiFetch('/donationStats');
         const data = await response.json();
         
         if (data.success) {

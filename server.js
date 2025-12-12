@@ -147,6 +147,7 @@ async function createTables() {
             email VARCHAR(100) UNIQUE,
             phone VARCHAR(20),
             password_hash VARCHAR(255),
+            is_admin TINYINT(1) NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     `);
@@ -563,7 +564,7 @@ app.post('/updateProfile', async (req,res)=>{
 });
 
 // --- Admin reset timetable ---
-app.post('/reset', async (req,res)=>{
+app.post('/reset', requireAdmin, async (req,res)=>{
     try{
         await db.query('UPDATE slots SET booked_by=NULL');
         res.json({success:true});
@@ -600,8 +601,18 @@ app.post('/checkAvailability', async (req,res)=>{
     }
 });
 
+// --- Auth middlewares ---
+function requireAuth(req, res, next) {
+    if (req.session && req.session.user) return next();
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+}
+function requireAdmin(req, res, next) {
+    if (req.session && req.session.user && req.session.user.is_admin) return next();
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+}
+
 // --- Get all bookings for admin ---
-app.get('/allBookings', async (req,res)=>{
+app.get('/allBookings', requireAdmin, async (req,res)=>{
     try{
         const [bookings] = await db.query(`
             SELECT s.slot, s.booked_by, 
@@ -650,17 +661,12 @@ app.get('/getUnavailableDates', async (req,res)=>{
 });
 
 // --- Set unavailable date (admin only) ---
-app.post('/setUnavailableDate', async (req,res)=>{
+app.post('/setUnavailableDate', requireAdmin, async (req,res)=>{
     try{
         const { date, adminEmail } = req.body;
-        console.log('Set unavailable date request:', { date, adminEmail });
-        console.log('Expected admin email:', config.app.admin.email);
+        console.log('Set unavailable date request:', { date });
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            console.log('Admin verification failed');
-            return res.json({success:false,message:'Admin access required'});
-        }
+        
         
         if (!date) {
             console.log('Date missing');
@@ -679,17 +685,12 @@ app.post('/setUnavailableDate', async (req,res)=>{
 });
 
 // --- Remove unavailable date (admin only) ---
-app.post('/removeUnavailableDate', async (req,res)=>{
+app.post('/removeUnavailableDate', requireAdmin, async (req,res)=>{
     try{
         const { date, adminEmail } = req.body;
-        console.log('Remove unavailable date request:', { date, adminEmail });
-        console.log('Expected admin email:', config.app.admin.email);
+        console.log('Remove unavailable date request:', { date });
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            console.log('Admin verification failed for remove');
-            return res.json({success:false,message:'Admin access required'});
-        }
+        
         
         if (!date) {
             console.log('Date missing for remove');
@@ -854,7 +855,7 @@ app.post('/getUserDonations', async (req,res)=>{
 });
 
 // --- Get donation statistics (admin) ---
-app.get('/donationStats', async (req,res)=>{
+app.get('/donationStats', requireAdmin, async (req,res)=>{
     try {
         // Total donations
         const [totalResult] = await db.query('SELECT COUNT(*) as count, SUM(total_amount) as total FROM donations WHERE status = "completed"');
@@ -899,7 +900,7 @@ app.get('/donationStats', async (req,res)=>{
 });
 
 // --- Get all donations for admin ---
-app.get('/getAllDonations', async (req,res)=>{
+app.get('/getAllDonations', requireAdmin, async (req,res)=>{
     try {
         // Check if database is connected
         if (!db) {
@@ -948,7 +949,7 @@ app.get('/getAllDonations', async (req,res)=>{
 });
 
 // --- Get all donation packages (including inactive) for admin ---
-app.get('/getAllDonationPackages', async (req,res)=>{
+app.get('/getAllDonationPackages', requireAdmin, async (req,res)=>{
     // Disable caching for admin list
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
@@ -969,9 +970,9 @@ app.get('/getAllDonationPackages', async (req,res)=>{
 });
 
 // --- Create new donation package (admin) ---
-app.post('/createDonationPackage', async (req,res)=>{
+app.post('/createDonationPackage', requireAdmin, async (req,res)=>{
     try {
-        const {package_id, name, description, price, impact_description, icon, adminEmail} = req.body;
+        const {package_id, name, description, price, impact_description, icon} = req.body;
         
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
@@ -1006,9 +1007,9 @@ app.post('/createDonationPackage', async (req,res)=>{
 });
 
 // --- Update donation package (admin) ---
-app.put('/updateDonationPackage', async (req,res)=>{
+app.put('/updateDonationPackage', requireAdmin, async (req,res)=>{
     try {
-        const {id, name, description, price, impact_description, icon, adminEmail} = req.body;
+        const {id, name, description, price, impact_description, icon} = req.body;
         
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
@@ -1042,19 +1043,15 @@ app.put('/updateDonationPackage', async (req,res)=>{
 });
 
 // --- Delete donation package (admin) - TRUE HARD DELETE ---
-app.delete('/deleteDonationPackage/:id', async (req,res)=>{
+app.delete('/deleteDonationPackage/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
         const {adminEmail} = req.body;
         
         console.log('DELETE request received for package ID:', id);
-        console.log('Admin email:', adminEmail);
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            console.log('Admin verification failed');
-            return res.json({success: false, message: 'Admin access required'});
-        }
+        
+        
 
         if (!db) {
             console.log('Database not connected');
@@ -1112,9 +1109,9 @@ app.get('/events', async (req,res)=>{
 });
 
 // Create new event (admin only)
-app.post('/events', async (req,res)=>{
+app.post('/events', requireAdmin, async (req,res)=>{
     try {
-        const {id, title, description, date, location, poster, adminEmail} = req.body;
+        const {id, title, description, date, location, poster} = req.body;
         
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
@@ -1149,10 +1146,10 @@ app.post('/events', async (req,res)=>{
 });
 
 // Update event (admin only)
-app.put('/events/:id', async (req,res)=>{
+app.put('/events/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
-        const {title, description, date, location, poster, adminEmail} = req.body;
+        const {title, description, date, location, poster} = req.body;
         
         // Verify admin permissions
         if (adminEmail !== config.app.admin.email) {
@@ -1186,7 +1183,7 @@ app.put('/events/:id', async (req,res)=>{
 });
 
 // Delete event (admin only)
-app.delete('/events/:id', async (req,res)=>{
+app.delete('/events/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
         const {adminEmail} = req.body;
@@ -1215,7 +1212,7 @@ app.delete('/events/:id', async (req,res)=>{
 });
 
 // --- Delete donation record (admin) ---
-app.delete('/deleteDonation/:id', async (req,res)=>{
+app.delete('/deleteDonation/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
         const {adminEmail} = req.body;

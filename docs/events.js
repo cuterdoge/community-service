@@ -592,7 +592,7 @@ class EventsManager {
 
     async saveEventToDatabase(eventData) {
         try {
-            const response = await fetch('/events', {
+            const response = await apiFetch('/events', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

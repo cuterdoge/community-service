@@ -311,7 +311,7 @@ async function addUnavailableDate() {
     }
     
     try {
-        const res = await fetch('/setUnavailableDate', {
+        const res = await apiFetch('/setUnavailableDate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -338,7 +338,7 @@ async function addUnavailableDate() {
 
 async function removeUnavailableDate(date) {
     try {
-        const res = await fetch('/removeUnavailableDate', {
+        const res = await apiFetch('/removeUnavailableDate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
