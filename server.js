@@ -663,7 +663,7 @@ app.get('/getUnavailableDates', async (req,res)=>{
 // --- Set unavailable date (admin only) ---
 app.post('/setUnavailableDate', requireAdmin, async (req,res)=>{
     try{
-        const { date, adminEmail } = req.body;
+        const { date } = req.body;
         console.log('Set unavailable date request:', { date });
         
         
@@ -687,7 +687,7 @@ app.post('/setUnavailableDate', requireAdmin, async (req,res)=>{
 // --- Remove unavailable date (admin only) ---
 app.post('/removeUnavailableDate', requireAdmin, async (req,res)=>{
     try{
-        const { date, adminEmail } = req.body;
+        const { date } = req.body;
         console.log('Remove unavailable date request:', { date });
         
         
@@ -974,11 +974,6 @@ app.post('/createDonationPackage', requireAdmin, async (req,res)=>{
     try {
         const {package_id, name, description, price, impact_description, icon} = req.body;
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            return res.json({success: false, message: 'Admin access required'});
-        }
-
         if (!package_id || !name || !description || !price) {
             return res.json({success: false, message: 'Missing required fields'});
         }
@@ -1046,8 +1041,6 @@ app.put('/updateDonationPackage', requireAdmin, async (req,res)=>{
 app.delete('/deleteDonationPackage/:id', requireAdmin, async (req,res)=>{
     try {
         const {id} = req.params;
-        const {adminEmail} = req.body;
-        
         console.log('DELETE request received for package ID:', id);
         
         
@@ -1113,11 +1106,6 @@ app.post('/events', requireAdmin, async (req,res)=>{
     try {
         const {id, title, description, date, location, poster} = req.body;
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            return res.json({success: false, message: 'Admin access required'});
-        }
-
         if (!id || !title || !description || !date || !location) {
             return res.json({success: false, message: 'Missing required fields'});
         }
@@ -1151,11 +1139,6 @@ app.put('/events/:id', requireAdmin, async (req,res)=>{
         const {id} = req.params;
         const {title, description, date, location, poster} = req.body;
         
-        // Verify admin permissions
-        if (adminEmail !== config.app.admin.email) {
-            return res.json({success: false, message: 'Admin access required'});
-        }
-
         if (!title || !description || !date || !location) {
             return res.json({success: false, message: 'Missing required fields'});
         }
