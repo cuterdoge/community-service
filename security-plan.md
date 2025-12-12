@@ -84,8 +84,10 @@ Phase 5: Input validation (express-validator)
 
 Phase 6: Client-side XSS mitigation
 - Immediate protection:
-  - Use textContent for plain text insertions
-  - When HTML is required, sanitize with DOMPurify before assigning to innerHTML
+  - Added DOMPurify (v3.0.6) CDN to all client-facing HTML pages
+  - Refactored `innerHTML` usage in `profile.js`, `events.js`, `donations.js`, `donation-checkout.js`, and `app.js` to use `DOMPurify.sanitize()`
+- Implemented:
+  - All critical `innerHTML` assignments are now sanitized.
 - Longer term:
   - Refactor to favor DOM APIs over innerHTML where feasible
 
@@ -121,7 +123,7 @@ Rollout plan
 - Implement Phase 1–2 in a branch, along with minimal unit/integration tests for login/logout and auth gating
 - Add Helmet + initial CSP and CORS restrictions (Phases 3–4)
 - Add express-validator and rate limiting (Phases 5 & 7)
-- Introduce DOMPurify to critical client rendering points (Phase 6)
+- [x] Introduce DOMPurify to critical client rendering points (Phase 6)
 - Verify secure cookies behind proxy in staging; then enable HSTS
 - Plan DB TLS tightening when CA is available
 

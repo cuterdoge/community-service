@@ -11,7 +11,7 @@ function initializeCheckout() {
         window.location.href = 'login.html';
         return;
     }
-    
+
     // Get donation data
     donationData = JSON.parse(sessionStorage.getItem('currentDonation'));
     if (!donationData) {
@@ -19,7 +19,7 @@ function initializeCheckout() {
         window.location.href = 'donations.html';
         return;
     }
-    
+
     // Populate the page
     populateDonationSummary();
     populateDonorInfo();
@@ -31,7 +31,7 @@ function initializeCheckout() {
 // Populate donation summary
 function populateDonationSummary() {
     const itemsContainer = document.getElementById('donation-items');
-    
+
     let itemsHTML = donationData.items.map(item => `
         <div class="donation-item">
             <div>
@@ -43,64 +43,64 @@ function populateDonationSummary() {
             </div>
         </div>
     `).join('');
-    
+
     itemsHTML += `
         <div class="donation-item">
             <div><strong>Total Donation</strong></div>
             <div><strong>RM ${donationData.total}</strong></div>
         </div>
     `;
-    
-    itemsContainer.innerHTML = itemsHTML;
+
+    itemsContainer.innerHTML = DOMPurify.sanitize(itemsHTML);
 }
 
 // Populate donor information
 function populateDonorInfo() {
     const donorContainer = document.getElementById('donor-info');
-    
-    donorContainer.innerHTML = `
+
+    donorContainer.innerHTML = DOMPurify.sanitize(`
         <p><strong>Name:</strong> ${currentUser.name}</p>
         <p><strong>Email:</strong> ${currentUser.email}</p>
         <p><strong>Transaction ID:</strong> ${donationData.transactionId}</p>
         <p><strong>Date:</strong> ${new Date(donationData.date).toLocaleDateString()}</p>
-    `;
+    `);
 }
 
 // Populate impact summary
 function populateImpactSummary() {
     const impactContainer = document.getElementById('impact-details');
-    
-    const impacts = donationData.items.map(item => 
+
+    const impacts = donationData.items.map(item =>
         `• ${item.impact} (${item.quantity}x)`
     ).join('<br>');
-    
-    impactContainer.innerHTML = `
+
+    impactContainer.innerHTML = DOMPurify.sanitize(`
         <p>With your generous donation of <strong>RM ${donationData.total}</strong>, you will:</p>
         <div style="text-align: left; margin-top: 15px;">
             ${impacts}
         </div>
         <p style="margin-top: 20px;"><em>Thank you for making a real difference in our community!</em></p>
-    `;
+    `);
 }
 
 // Setup card number formatting
 function setupCardFormatting() {
     const cardNumberInput = document.getElementById('cardNumber');
-    
-    cardNumberInput.addEventListener('input', function(e) {
+
+    cardNumberInput.addEventListener('input', function (e) {
         let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
         let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-        
+
         if (formattedValue.length > 19) {
             formattedValue = formattedValue.substring(0, 19);
         }
-        
+
         e.target.value = formattedValue;
     });
-    
+
     // CVV input formatting
     const cvvInput = document.getElementById('cvv');
-    cvvInput.addEventListener('input', function(e) {
+    cvvInput.addEventListener('input', function (e) {
         e.target.value = e.target.value.replace(/[^0-9]/gi, '').substring(0, 3);
     });
 }
@@ -109,7 +109,7 @@ function setupCardFormatting() {
 function populateExpiryYears() {
     const yearSelect = document.getElementById('expiryYear');
     const currentYear = new Date().getFullYear();
-    
+
     for (let i = 0; i < 15; i++) {
         const year = currentYear + i;
         const option = document.createElement('option');
@@ -122,10 +122,10 @@ function populateExpiryYears() {
 // Process payment
 async function processPayment(event) {
     event.preventDefault();
-    
+
     // Show processing overlay
     document.getElementById('processing-overlay').style.display = 'flex';
-    
+
     try {
         // Prepare payment data
         const paymentInfo = {
@@ -165,17 +165,17 @@ async function processPayment(event) {
                 status: 'completed',
                 processedAt: new Date().toISOString()
             };
-            
+
             // Clear session data
             sessionStorage.removeItem('currentDonation');
-            
+
             // Redirect to success page
             sessionStorage.setItem('completedDonation', JSON.stringify(receipt));
             window.location.href = 'donation-success.html';
         } else {
             throw new Error(result.message || 'Payment processing failed');
         }
-        
+
     } catch (error) {
         console.error('Payment processing error:', error);
         alert('There was an error processing your donation. Please try again.');
