@@ -44,7 +44,7 @@ Phase 2: Authorization
 
 Phase 3: Security headers and CSP
 - Helmet: enable defaults (frameguard, noSniff, hidePoweredBy, etc.)
-- HSTS: enable after HTTPS-only behavior is confirmed in prod
+- HSTS: enable after HTTPS-only behavior is confirmed in prod (toggle via ENABLE_HSTS=true in environment once verified)
 - Initial CSP (permissive to match current frontend):
   - default-src 'self'
   - script-src 'self' 'unsafe-inline'
@@ -101,6 +101,7 @@ Configuration checklist (env vars)
 - SESSION_SECRET (strong, random)
 - DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME (Railway MySQL)
 - NODE_ENV=production (in prod)
+- ENABLE_HSTS (set to true in production only after verifying HTTPS-only traffic)
 
 Rollout plan
 - Implement Phase 1–2 in a branch, along with minimal unit/integration tests for login/logout and auth gating
