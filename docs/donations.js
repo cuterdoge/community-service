@@ -956,7 +956,7 @@ async function deletePackage(packageId) {
         const response = await apiFetch(`/deleteDonationPackage/${packageId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminEmail: currentUser.email })
+            body: JSON.stringify({})
         });
         
         console.log('Delete response status:', response.status);
@@ -1082,7 +1082,7 @@ async function deleteDonation(donationId) {
         const response = await apiFetch(`/deleteDonation/${donationId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminEmail: currentUser.email })
+            body: JSON.stringify({})
         });
         
         const data = await response.json();

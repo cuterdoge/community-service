@@ -315,8 +315,7 @@ async function addUnavailableDate() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                date: date,
-                adminEmail: currentUser.email
+                date: date
             })
         });
         
@@ -342,8 +341,7 @@ async function removeUnavailableDate(date) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                date: date,
-                adminEmail: currentUser.email
+                date: date
             })
         });
         

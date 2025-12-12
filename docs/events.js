@@ -618,12 +618,9 @@ class EventsManager {
 
     async updateEventInDatabase(eventId, eventData) {
         try {
-            const response = await fetch(`/events/${eventId}`, {
+            const response = await apiFetch(`/events/${eventId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(eventData)
+                body: eventData
             });
             
             const data = await response.json();
@@ -644,12 +641,9 @@ class EventsManager {
 
     async deleteEventFromDatabase(eventId) {
         try {
-            const response = await fetch(`/events/${eventId}`, {
+            const response = await apiFetch(`/events/${eventId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
+                body: {}
             });
             
             const data = await response.json();
