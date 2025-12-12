@@ -61,6 +61,11 @@ Phase 4: CORS
   - origin: ['https://community-service-ahp0.onrender.com']
   - credentials: true
 - Client: use fetch(..., { credentials: 'include' }) when authentication is required
+- Implemented:
+  - Dynamic allowedOrigins based on NODE_ENV (development vs production)
+  - CORS middleware with credentials enabled and optionsSuccessStatus=204
+  - Requests with no Origin header (same-origin or curl) are allowed
+  - Client helper docs/fetch.js defaults credentials: 'include'
 
 Phase 5: Input validation (express-validator)
 - Add validators per route:

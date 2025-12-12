@@ -32,22 +32,23 @@ app.use(helmet({
     }
 }));
 
-// CORS with credentials support
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://community-service-ahp0.onrender.com'
-];
+// CORS with credentials support (Phase 4)
+const isProd = process.env.NODE_ENV === 'production';
+const allowedOrigins = isProd
+  ? ['https://community-service-ahp0.onrender.com']
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
 app.use(cors({
     origin: function(origin, callback) {
-        // Allow requests with no origin (like same-origin or curl)
+        // Allow requests with no origin (same-origin, curl)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
         return callback(new Error('Not allowed by CORS'));
     },
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 204
 }));
 
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
