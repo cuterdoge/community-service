@@ -92,24 +92,35 @@ Phase 6: Client-side XSS mitigation
   - Refactor to favor DOM APIs over innerHTML where feasible
 
 Phase 7: Rate limiting
-- Global limiter: e.g., 100 requests/min per IP
-- Login limiter: e.g., 5 attempts/min per IP
+- Global limiter: 100 requests/min per IP
+- Login limiter: 5 attempts/min per IP
 - Optionally add modest limits to admin routes
+- Implemented:
+  - Added `express-rate-limit` middleware
+  - Global limiter (100 req/min) applied to all routes
+  - Login limiter (5 req/min) applied to `/login` endpoint
 
 Phase 8: HTTPS enforcement
 - Rely on Render/Railway for TLS termination
 - app.enable('trust proxy') so secure cookies are set correctly behind proxy
 - Add HSTS via Helmet only after confirming HTTPS-only traffic in prod
+- Implemented:
+  - `trust proxy` enabled in production
+  - HSTS configured via `ENABLE_HSTS` env var (default false)
 
 Phase 9: Database TLS hardening
 - Current: keep existing SSL config due to lack of CA bundle
 - Future: attempt ssl.rejectUnauthorized = true with provider CA when available
 - If Railway supports a secure connection string with SSL mode, prefer that verbatim
+- Implemented:
+  - Validated `config.js` uses `ssl: { rejectUnauthorized: false }` as intended for now.
 
 Phase 10: Secrets handling (deferred)
 - Continue using .env for now (risk acknowledged)
 - Ensure ADMIN_PASSWORD is strong (non-default)
 - Later: remove .env from repo, rotate DB/admin credentials, and rely on platform env vars
+- Implemented:
+  - Continued use of `.env` verified.
 
 Configuration checklist (env vars)
 - ADMIN_EMAIL
@@ -117,18 +128,20 @@ Configuration checklist (env vars)
 - SESSION_SECRET (strong, random)
 - DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME (Railway MySQL)
 - NODE_ENV=production (in prod)
-- ENABLE_HSTS (set to true in production only after verifying HTTPS-only traffic)
+- ENABLE_HSTS (set to true in production only after verifying HTTPS-only traffic) [Added to .env]
 
 Rollout plan
 - Implement Phase 1–2 in a branch, along with minimal unit/integration tests for login/logout and auth gating
 - Add Helmet + initial CSP and CORS restrictions (Phases 3–4)
 - Add express-validator and rate limiting (Phases 5 & 7)
 - [x] Introduce DOMPurify to critical client rendering points (Phase 6)
+- [x] Add express-validator and rate limiting (Phases 5 & 7)
 - Verify secure cookies behind proxy in staging; then enable HSTS
 - Plan DB TLS tightening when CA is available
 
 Dependencies added
 - express-validator ^7.0.1 (Phase 5)
+- express-rate-limit ^7.x (Phase 7)
 
 Notes
 - We will avoid breaking the current client flows by initially keeping CSP permissive ('unsafe-inline') and tightening after refactors.
