@@ -1,5 +1,6 @@
 require('dotenv').config({ override: true });
 const express = require('express');
+const helmet = require('helmet');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const session = require('express-session');
@@ -14,6 +15,22 @@ const app = express();
 if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
+
+// Helmet security headers and CSP (Phase 3)
+app.use(helmet({
+    // Disable HSTS for now; can enable later via ENABLE_HSTS=true in env
+    hsts: process.env.ENABLE_HSTS === 'true' ? { maxAge: 15552000, includeSubDomains: true } : false,
+    contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:'],
+            connectSrc: ["'self'"]
+        }
+    }
+}));
 
 // CORS with credentials support
 const allowedOrigins = [
