@@ -9,6 +9,7 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const { body, param, query, validationResult } = require('express-validator');
 const config = require('./config');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -51,6 +52,25 @@ app.use(cors({
     credentials: true,
     optionsSuccessStatus: 204
 }));
+
+// Rate Limiters (Phase 7)
+// Global limiter: 100 requests per minute
+const globalLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    limit: 100,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+app.use(globalLimiter);
+
+// Login limiter: 5 attempts per minute
+const loginLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    limit: 5,
+    message: { success: false, message: 'Too many login attempts, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
 
@@ -436,7 +456,7 @@ app.post('/registerVolunteer', withValidation([
 });
 
 // --- Volunteer login (session-based) ---
-app.post('/login', withValidation([
+app.post('/login', loginLimiter, withValidation([
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 1 }).withMessage('Password required')
 ]), async (req, res) => {
