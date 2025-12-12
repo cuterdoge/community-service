@@ -7,6 +7,7 @@ const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
 const bcrypt = require('bcrypt');
+const { body, param, query, validationResult } = require('express-validator');
 const config = require('./config');
 
 const app = express();
@@ -52,6 +53,23 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
+
+// Centralized validation error handler (Phase 5)
+function withValidation(rules) {
+    return [
+        ...rules,
+        (req, res, next) => {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    success: false,
+                    errors: errors.array().map(e => ({ field: e.path, msg: e.msg }))
+                });
+            }
+            next();
+        }
+    ];
+}
 
 // Serve static files
 app.use(express.static('docs'));
@@ -372,7 +390,12 @@ async function initializeServer() {
 initializeServer();
 
 // --- Volunteer registration ---
-app.post('/registerVolunteer', async (req,res)=>{
+app.post('/registerVolunteer', withValidation([
+    body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Name is required (max 100)'),
+    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+    body('phone').optional().isLength({ min: 3, max: 20 }).withMessage('Phone length 3-20'),
+    body('password').isLength({ min: 12 }).withMessage('Password must be at least 12 characters')
+]), async (req,res)=>{
     try {
         const {name,email,phone,password} = req.body;
         if(!name || !email || !phone || !password) return res.json({success:false,message:'Missing fields'});
@@ -411,7 +434,10 @@ app.post('/registerVolunteer', async (req,res)=>{
 });
 
 // --- Volunteer login (session-based) ---
-app.post('/login', async (req,res)=>{
+app.post('/login', withValidation([
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({ min: 1 }).withMessage('Password required')
+]), async (req,res)=>{
     try {
         const {email,password} = req.body;
         if(!email || !password) return res.json({success:false,message:'Email and password are required'});
@@ -507,7 +533,11 @@ app.get('/timetable', async (req,res)=>{
 });
 
 // --- Book/release slot (new date-based system) ---
-app.post('/book', async (req,res)=>{
+app.post('/book', withValidation([
+    body('email').isEmail().normalizeEmail(),
+    body('name').optional().trim().isLength({ max: 100 }),
+    body('slot').isString().isLength({ min: 3, max: 50 })
+]), async (req,res)=>{
     try{
         const {email, name, slot} = req.body;
         if(!email || !slot) return res.json({success:false,message:'Missing fields'});
@@ -536,7 +566,13 @@ app.post('/book', async (req,res)=>{
 
 
 // --- Update user profile ---
-app.post('/updateProfile', async (req,res)=>{
+app.post('/updateProfile', withValidation([
+    body('email').isEmail().normalizeEmail(),
+    body('name').trim().isLength({ min: 1, max: 100 }),
+    body('phone').trim().isLength({ min: 3, max: 20 }),
+    body('currentPassword').isLength({ min: 1 }),
+    body('newPassword').optional({ nullable: true }).isLength({ min: 12 }).withMessage('New password must be at least 12 characters')
+]), async (req,res)=>{
     try {
         const {email, name, phone, currentPassword, newPassword} = req.body;
         if(!email || !name || !phone || !currentPassword) {
@@ -606,7 +642,9 @@ app.post('/logout', (req, res) => {
 });
 
 // --- Check if date is available for volunteering ---
-app.post('/checkAvailability', async (req,res)=>{
+app.post('/checkAvailability', withValidation([
+    body('date').optional().isISO8601().withMessage('date must be ISO8601 (YYYY-MM-DD)')
+]), async (req,res)=>{
     try{
         const { date } = req.body;
         if(!date) return res.json({available:true}); // Default to available if no date provided
@@ -649,7 +687,9 @@ app.get('/allBookings', requireAdmin, async (req,res)=>{
 });
 
 // --- Get user's bookings ---
-app.post('/myBookings', async (req,res)=>{
+app.post('/myBookings', withValidation([
+    body('email').isEmail().normalizeEmail()
+]), async (req,res)=>{
     try{
         const { email } = req.body;
         if(!email) return res.json({bookings: []});
@@ -679,7 +719,9 @@ app.get('/getUnavailableDates', async (req,res)=>{
 });
 
 // --- Set unavailable date (admin only) ---
-app.post('/setUnavailableDate', requireAdmin, async (req,res)=>{
+app.post('/setUnavailableDate', requireAdmin, withValidation([
+    body('date').isISO8601().withMessage('date must be ISO8601 (YYYY-MM-DD)')
+]), async (req,res)=>{
     try{
         const { date } = req.body;
         console.log('Set unavailable date request:', { date });
@@ -703,7 +745,9 @@ app.post('/setUnavailableDate', requireAdmin, async (req,res)=>{
 });
 
 // --- Remove unavailable date (admin only) ---
-app.post('/removeUnavailableDate', requireAdmin, async (req,res)=>{
+app.post('/removeUnavailableDate', requireAdmin, withValidation([
+    body('date').isISO8601().withMessage('date must be ISO8601 (YYYY-MM-DD)')
+]), async (req,res)=>{
     try{
         const { date } = req.body;
         console.log('Remove unavailable date request:', { date });
@@ -746,7 +790,21 @@ app.get('/donationPackages', async (req,res)=>{
 });
 
 // --- Process donation ---
-app.post('/processDonation', async (req,res)=>{
+app.post('/processDonation', withValidation([
+    body('donationData').isObject(),
+    body('donationData.total').isFloat({ gt: 0 }),
+    body('donationData.items').isArray({ min: 1 }),
+    body('donationData.items.*.id').isString().isLength({ min: 1, max: 50 }),
+    body('donationData.items.*.name').isString().isLength({ min: 1, max: 100 }),
+    body('donationData.items.*.price').isFloat({ gt: 0 }),
+    body('donationData.items.*.quantity').isInt({ gt: 0 }),
+    body('donorInfo.email').isEmail().normalizeEmail(),
+    body('donorInfo.name').isString().isLength({ min: 1, max: 100 }),
+    body('paymentInfo.cardName').isString().isLength({ min: 1, max: 100 }),
+    body('paymentInfo.cardLast4').isLength({ min: 4, max: 4 }).isNumeric(),
+    body('paymentInfo.expiryMonth').isInt({ min: 1, max: 12 }),
+    body('paymentInfo.expiryYear').isInt({ min: 2000, max: 2100 })
+]), async (req,res)=>{
     try {
         const {donationData, donorInfo, paymentInfo} = req.body;
         
@@ -825,7 +883,9 @@ app.post('/processDonation', async (req,res)=>{
 });
 
 // --- Get user donations ---
-app.post('/getUserDonations', async (req,res)=>{
+app.post('/getUserDonations', withValidation([
+    body('email').isEmail().normalizeEmail()
+]), async (req,res)=>{
     try {
         const {email} = req.body;
         
@@ -988,7 +1048,14 @@ app.get('/getAllDonationPackages', requireAdmin, async (req,res)=>{
 });
 
 // --- Create new donation package (admin) ---
-app.post('/createDonationPackage', requireAdmin, async (req,res)=>{
+app.post('/createDonationPackage', requireAdmin, withValidation([
+    body('package_id').matches(/^[a-z0-9-]+$/).withMessage('package_id must be kebab-case'),
+    body('name').trim().isLength({ min: 1, max: 100 }),
+    body('description').trim().isLength({ min: 1, max: 2000 }),
+    body('price').isFloat({ gt: 0 }),
+    body('impact_description').optional().isLength({ max: 4000 }),
+    body('icon').optional().isLength({ max: 10 })
+]), async (req,res)=>{
     try {
         const {package_id, name, description, price, impact_description, icon} = req.body;
         
@@ -1020,7 +1087,14 @@ app.post('/createDonationPackage', requireAdmin, async (req,res)=>{
 });
 
 // --- Update donation package (admin) ---
-app.put('/updateDonationPackage', requireAdmin, async (req,res)=>{
+app.put('/updateDonationPackage', requireAdmin, withValidation([
+    body('id').isInt({ gt: 0 }).toInt(),
+    body('name').trim().isLength({ min: 1, max: 100 }),
+    body('description').trim().isLength({ min: 1, max: 2000 }),
+    body('price').isFloat({ gt: 0 }),
+    body('impact_description').optional().isLength({ max: 4000 }),
+    body('icon').optional().isLength({ max: 10 })
+]), async (req,res)=>{
     try {
         const {id, name, description, price, impact_description, icon} = req.body;
         
@@ -1051,7 +1125,9 @@ app.put('/updateDonationPackage', requireAdmin, async (req,res)=>{
 });
 
 // --- Delete donation package (admin) - TRUE HARD DELETE ---
-app.delete('/deleteDonationPackage/:id', requireAdmin, async (req,res)=>{
+app.delete('/deleteDonationPackage/:id', requireAdmin, withValidation([
+    param('id').isInt({ gt: 0 }).toInt()
+]), async (req,res)=>{
     try {
         const {id} = req.params;
         console.log('DELETE request received for package ID:', id);
@@ -1115,7 +1191,14 @@ app.get('/events', async (req,res)=>{
 });
 
 // Create new event (admin only)
-app.post('/events', requireAdmin, async (req,res)=>{
+app.post('/events', requireAdmin, withValidation([
+    body('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 }),
+    body('title').trim().isLength({ min: 1, max: 200 }),
+    body('description').trim().isLength({ min: 1, max: 5000 }),
+    body('date').isISO8601(),
+    body('location').trim().isLength({ min: 1, max: 200 }),
+    body('poster').optional().isString()
+]), async (req,res)=>{
     try {
         const {id, title, description, date, location, poster} = req.body;
         
@@ -1147,7 +1230,14 @@ app.post('/events', requireAdmin, async (req,res)=>{
 });
 
 // Update event (admin only)
-app.put('/events/:id', requireAdmin, async (req,res)=>{
+app.put('/events/:id', requireAdmin, withValidation([
+    param('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 }),
+    body('title').trim().isLength({ min: 1, max: 200 }),
+    body('description').trim().isLength({ min: 1, max: 5000 }),
+    body('date').isISO8601(),
+    body('location').trim().isLength({ min: 1, max: 200 }),
+    body('poster').optional().isString()
+]), async (req,res)=>{
     try {
         const {id} = req.params;
         const {title, description, date, location, poster} = req.body;
@@ -1179,7 +1269,9 @@ app.put('/events/:id', requireAdmin, async (req,res)=>{
 });
 
 // Delete event (admin only)
-app.delete('/events/:id', requireAdmin, async (req,res)=>{
+app.delete('/events/:id', requireAdmin, withValidation([
+    param('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 })
+]), async (req,res)=>{
     try {
         const {id} = req.params;
         if (!db) {
@@ -1201,7 +1293,9 @@ app.delete('/events/:id', requireAdmin, async (req,res)=>{
 });
 
 // --- Delete donation record (admin) ---
-app.delete('/deleteDonation/:id', requireAdmin, async (req,res)=>{
+app.delete('/deleteDonation/:id', requireAdmin, withValidation([
+    param('id').isInt({ gt: 0 }).toInt()
+]), async (req,res)=>{
     try {
         const {id} = req.params;
         if (!db) {

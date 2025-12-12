@@ -69,9 +69,18 @@ Phase 4: CORS
 
 Phase 5: Input validation (express-validator)
 - Add validators per route:
-  - Auth: email isEmail, password min length (>= 12 or chosen policy), trim
-  - Donations/events: title/description length caps, numeric checks (amount, ids), strict allowlist
+  - Auth: email isEmail, password min length (>= 12), trim
+  - Register: name (1-100), email, optional phone (3-20), password >= 12
+  - Profile update: email, name (1-100), phone (3-20), currentPassword required, newPassword optional >= 12
+  - Booking: email, slot (3-50), optional name (<= 100)
+  - Unavailable dates: date must be ISO8601 (YYYY-MM-DD)
+  - Donations: structured donationData/donorInfo/paymentInfo with numeric and format checks
+  - Donation packages: package_id kebab-case, name (1-100), description (1-2000), price > 0, optional fields capped
+  - Events: id slug (alnum-dash), title (1-200), description (1-5000), date ISO8601, location (1-200), optional poster
 - Centralize validation error handling to return consistent 400 responses
+- Implemented:
+  - Introduced withValidation() helper using validationResult
+  - Added express-validator rules to all critical POST/PUT/DELETE routes listed above
 
 Phase 6: Client-side XSS mitigation
 - Immediate protection:
