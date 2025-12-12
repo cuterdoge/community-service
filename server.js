@@ -2,16 +2,72 @@ require('dotenv').config({ override: true });
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
 const bcrypt = require('bcrypt');
 const config = require('./config');
 
 const app = express();
-app.use(cors());
+
+// Trust proxy for secure cookies behind Render/Railway
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
+// CORS with credentials support
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://community-service-ahp0.onrender.com'
+];
+app.use(cors({
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like same-origin or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+}));
+
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
 
 // Serve static files
 app.use(express.static('docs'));
+
+// Sessions
+const sessionSecret = process.env.SESSION_SECRET || 'change_me_session_secret';
+let sessionStore = undefined;
+
+if (process.env.NODE_ENV === 'production') {
+    // Use MySQL-based session store in production
+    const dbConf = config.database;
+    sessionStore = new MySQLStore({
+        host: dbConf.host,
+        port: dbConf.port,
+        user: dbConf.user,
+        password: dbConf.password,
+        database: dbConf.database,
+        createDatabaseTable: true
+    });
+}
+
+app.use(session({
+    name: 'sid',
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    store: sessionStore,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    }
+}));
 
 // Default route
 app.get('/', (req, res) => {
@@ -335,7 +391,7 @@ app.post('/registerVolunteer', async (req,res)=>{
     }
 });
 
-// --- Volunteer login ---
+// --- Volunteer login (session-based) ---
 app.post('/login', async (req,res)=>{
     try {
         const {email,password} = req.body;
@@ -345,14 +401,22 @@ app.post('/login', async (req,res)=>{
         if (email === config.app.admin.email) {
             console.log('Admin login attempt for:', email);
             if (password === config.app.admin.password) {
-                return res.json({
-                    success: true,
-                    user: {
-                        id: 'admin',
-                        name: 'Administrator',
-                        email: config.app.admin.email,
-                        isAdmin: true
+                // Regenerate and set session
+                return req.session.regenerate((err) => {
+                    if (err) {
+                        console.error('Session regenerate failed:', err);
+                        return res.status(500).json({ success: false, message: 'Session error' });
                     }
+                    req.session.user = { id: 'builtin-admin', email: config.app.admin.email, is_admin: true };
+                    return res.json({
+                        success: true,
+                        user: {
+                            id: 'builtin-admin',
+                            name: 'Administrator',
+                            email: config.app.admin.email,
+                            isAdmin: true
+                        }
+                    });
                 });
             } else {
                 return res.json({success:false,message:'Invalid email or password'});
@@ -379,14 +443,23 @@ app.post('/login', async (req,res)=>{
             return res.json({success:false,message:'Invalid email or password'});
         }
         
-        res.json({
-            success:true,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone
+        // Set session
+        return req.session.regenerate(async (err) => {
+            if (err) {
+                console.error('Session regenerate failed:', err);
+                return res.status(500).json({ success: false, message: 'Session error' });
             }
+            req.session.user = { id: user.id, email: user.email, is_admin: false };
+            return res.json({
+                success:true,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    isAdmin: false
+                }
+            });
         });
     } catch(err){
         console.error('Login error:', err);
@@ -498,6 +571,19 @@ app.post('/reset', async (req,res)=>{
         console.error(err);
         res.json({success:false});
     }
+});
+
+// --- Logout ---
+app.post('/logout', (req, res) => {
+    if (!req.session) return res.json({ success: true });
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Session destroy failed:', err);
+            return res.status(500).json({ success: false, message: 'Logout failed' });
+        }
+        res.clearCookie('sid');
+        return res.json({ success: true });
+    });
 });
 
 // --- Check if date is available for volunteering ---
