@@ -113,7 +113,7 @@ function populateExpiryYears() {
     for (let i = 0; i < 15; i++) {
         const year = currentYear + i;
         const option = document.createElement('option');
-        option.value = year.toString().substring(2);
+        option.value = year.toString();
         option.textContent = year;
         yearSelect.appendChild(option);
     }
@@ -131,8 +131,8 @@ async function processPayment(event) {
         const paymentInfo = {
             cardName: document.getElementById('cardName').value,
             cardLast4: document.getElementById('cardNumber').value.slice(-4),
-            expiryMonth: document.getElementById('expiryMonth').value,
-            expiryYear: document.getElementById('expiryYear').value
+            expiryMonth: parseInt(document.getElementById('expiryMonth').value),
+            expiryYear: parseInt(document.getElementById('expiryYear').value)
         };
 
         const donorInfo = {
