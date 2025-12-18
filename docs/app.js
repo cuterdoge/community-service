@@ -71,7 +71,7 @@ async function loadTimetable() {
             month: 'long',
             day: 'numeric'
         });
-        headerDiv.innerHTML = DOMPurify.sanitize(`<h4>Available Time Slots for ${dateStr}</h4>`, { ADD_ATTR: ['onclick'] });
+        headerDiv.innerHTML = DOMPurify.sanitize(`<h4>Available Time Slots for ${dateStr}</h4>`, { ADD_ATTR: ['onclick', 'onchange'] });
         grid.appendChild(headerDiv);
 
         // Check if date is blocked
@@ -120,13 +120,13 @@ async function loadTimetable() {
 
             if (isBookedByMe) {
                 statusCell.innerHTML = '<span class="badge bg-success">Booked by You</span>';
-                actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-outline-danger btn-sm" onclick="bookSlot('${slotId}')">Cancel Booking</button>`, { ADD_ATTR: ['onclick'] });
+                actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-outline-danger btn-sm" onclick="bookSlot('${slotId}')">Cancel Booking</button>`, { ADD_ATTR: ['onclick', 'onchange'] });
             } else if (isBooked) {
                 statusCell.innerHTML = '<span class="badge bg-secondary">Already Booked</span>';
                 actionCell.innerHTML = '<button class="btn btn-secondary btn-sm" disabled>Locked</button>';
             } else {
                 statusCell.innerHTML = '<span class="badge bg-light text-dark">Available</span>';
-                actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-primary btn-sm" onclick="bookSlot('${slotId}')">Book Slot</button>`, { ADD_ATTR: ['onclick'] });
+                actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-primary btn-sm" onclick="bookSlot('${slotId}')">Book Slot</button>`, { ADD_ATTR: ['onclick', 'onchange'] });
             }
 
             row.appendChild(statusCell);
@@ -271,7 +271,7 @@ async function viewAllBookings() {
                         </div>`
             }).join('')}
                 </div>
-            `);
+            `, { ADD_ATTR: ['onclick', 'onchange'] });
         }
     } catch (err) {
         console.error('Failed to load bookings:', err);
@@ -329,7 +329,7 @@ async function manageUnavailableDates() {
     // Add modal to page
     const modalDiv = document.createElement('div');
     modalDiv.id = 'unavailableModal';
-    modalDiv.innerHTML = DOMPurify.sanitize(modalHtml, { ADD_ATTR: ['onclick'] });
+    modalDiv.innerHTML = DOMPurify.sanitize(modalHtml, { ADD_ATTR: ['onclick', 'onchange'] });
     document.body.appendChild(modalDiv);
 }
 

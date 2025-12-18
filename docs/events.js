@@ -437,7 +437,7 @@ class EventsManager {
             eventsGrid.style.display = 'grid';
             noEventsMessage.style.display = 'none';
 
-            eventsGrid.innerHTML = DOMPurify.sanitize(filteredEvents.map(event => this.createEventCard(event)).join(''), { ADD_ATTR: ['onclick'] });
+            eventsGrid.innerHTML = DOMPurify.sanitize(filteredEvents.map(event => this.createEventCard(event)).join(''), { ADD_ATTR: ['onclick', 'onchange'] });
         }
     }
 
@@ -537,7 +537,7 @@ class EventsManager {
                     <button onclick="eventsManager.closeEventModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>
-        `, { ADD_ATTR: ['onclick'] });
+        `, { ADD_ATTR: ['onclick', 'onchange'] });
 
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';

@@ -215,7 +215,7 @@ async function loadMyVolunteerSlots() {
         const slotsContainer = document.getElementById('my-volunteer-slots');
 
         if (!data.bookings || data.bookings.length === 0) {
-            slotsContainer.innerHTML = DOMPurify.sanitize('<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>', { ADD_ATTR: ['onclick'] });
+            slotsContainer.innerHTML = DOMPurify.sanitize('<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>', { ADD_ATTR: ['onclick', 'onchange'] });
         } else {
             slotsContainer.innerHTML = DOMPurify.sanitize(`
                 <div class="bookings-list">
@@ -245,11 +245,11 @@ async function loadMyVolunteerSlots() {
                         </div>`
             }).join('')}
                 </div>
-            `, { ADD_ATTR: ['onclick'] });
+            `, { ADD_ATTR: ['onclick', 'onchange'] });
         }
     } catch (err) {
         console.error('Failed to load volunteer slots:', err);
-        document.getElementById('my-volunteer-slots').innerHTML = DOMPurify.sanitize('<p style="color: red;">Failed to load volunteer slots. Please try again.</p>', { ADD_ATTR: ['onclick'] });
+        document.getElementById('my-volunteer-slots').innerHTML = DOMPurify.sanitize('<p style="color: red;">Failed to load volunteer slots. Please try again.</p>', { ADD_ATTR: ['onclick', 'onchange'] });
     }
 }
 
@@ -315,7 +315,7 @@ async function loadMyDonations() {
                     <p>Start making a difference in our community today!</p>
                     <a href="donations.html" class="donate-now-btn">Make Your First Donation</a>
                 </div>
-            `, { ADD_ATTR: ['onclick'] });
+            `, { ADD_ATTR: ['onclick', 'onchange'] });
             return;
         }
 
@@ -348,12 +348,12 @@ async function loadMyDonations() {
             <div class="donations-list">
                 ${donationHistory.map(donation => renderDonationItem(donation)).join('')}
             </div>
-        `, { ADD_ATTR: ['onclick'] });
+        `, { ADD_ATTR: ['onclick', 'onchange'] });
 
     } catch (error) {
         console.error('Error loading donations:', error);
-        document.getElementById('my-donations').innerHTML =
-            DOMPurify.sanitize('<p style="color: red;">Failed to load donation history. Please try again.</p>');
+        donationsContainer.innerHTML =
+            DOMPurify.sanitize('<p style="color: red;">Failed to load donation history. Please try again.</p>', { ADD_ATTR: ['onclick', 'onchange'] });
     }
 }
 

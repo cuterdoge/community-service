@@ -192,7 +192,7 @@ function renderDonationPackages() {
                     </div>
                 </div>
             </div>
-        `);
+        `, { ADD_ATTR: ['onclick', 'onchange'] });
         return;
     }
 
@@ -239,7 +239,7 @@ function renderDonationPackages() {
                 </div>
             </div>
         </div>
-    `).join(''));
+    `).join(''), { ADD_ATTR: ['onclick', 'onchange'] });
 }
 
 // Update quantity
@@ -321,7 +321,7 @@ function updateCartDisplay() {
                     </div>
                 </div>
             `;
-        }).join(''));
+        }).join(''), { ADD_ATTR: ['onclick', 'onchange'] });
 
         // Calculate total
         const total = cartEntries.reduce((sum, [packageId, quantity]) => {
@@ -564,7 +564,7 @@ function createAdminHero() {
                 <p class="lead mb-0">Manage donation packages, track donations, and view analytics</p>
             </div>
         </div>
-    `);
+    `, { ADD_ATTR: ['onclick', 'onchange'] });
 
     // Insert after the header (first element in container-fluid)
     const firstChild = container.firstElementChild;
@@ -659,7 +659,7 @@ function createAdminSectionIfMissing() {
     `;
 
     // Add admin section to the end of the container
-    container.insertAdjacentHTML('beforeend', DOMPurify.sanitize(adminSectionHTML));
+    container.insertAdjacentHTML('beforeend', DOMPurify.sanitize(adminSectionHTML, { ADD_ATTR: ['onclick', 'onchange'] }));
 
     // Now try to show it
     const newAdminSection = document.getElementById('admin-section');
@@ -789,7 +789,7 @@ function displayAdminPackages(packages) {
     console.log('Number of packages:', packages.length);
 
     if (packages.length === 0) {
-        container.innerHTML = DOMPurify.sanitize('<p class="text-muted">No donation packages found.</p>');
+        container.innerHTML = DOMPurify.sanitize('<p class="text-muted">No donation packages found.</p>', { ADD_ATTR: ['onclick', 'onchange'] });
         return;
     }
 
@@ -822,7 +822,7 @@ function displayAdminPackages(packages) {
     }).join('');
 
     console.log('Setting innerHTML with packages HTML');
-    container.innerHTML = DOMPurify.sanitize(packagesHTML, { ADD_ATTR: ['onclick'] });
+    container.innerHTML = DOMPurify.sanitize(packagesHTML, { ADD_ATTR: ['onclick', 'onchange'] });
     console.log('Packages should now be visible');
 }
 
@@ -1024,7 +1024,7 @@ function displayAllDonations(donations) {
     const container = document.getElementById('admin-donations-list');
 
     if (donations.length === 0) {
-        container.innerHTML = DOMPurify.sanitize('<p class="text-muted">No donations found.</p>');
+        container.innerHTML = DOMPurify.sanitize('<p class="text-muted">No donations found.</p>', { ADD_ATTR: ['onclick', 'onchange'] });
         return;
     }
 
@@ -1063,7 +1063,7 @@ function displayAllDonations(donations) {
         `;
     }).join('');
 
-    container.innerHTML = DOMPurify.sanitize(donationsHTML, { ADD_ATTR: ['onclick'] });
+    container.innerHTML = DOMPurify.sanitize(donationsHTML, { ADD_ATTR: ['onclick', 'onchange'] });
 }
 
 // Delete donation
@@ -1212,7 +1212,7 @@ function displayDonationStats(stats) {
         </div>
     `;
 
-    container.innerHTML = DOMPurify.sanitize(statsHTML, { ADD_ATTR: ['onclick'] });
+    container.innerHTML = DOMPurify.sanitize(statsHTML, { ADD_ATTR: ['onclick', 'onchange'] });
 }
 
 // Filter donations by date
@@ -1248,7 +1248,7 @@ function showMessage(message, type) {
     messageDiv.innerHTML = DOMPurify.sanitize(`
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `);
+    `, { ADD_ATTR: ['onclick', 'onchange'] });
 
     document.body.appendChild(messageDiv);
 

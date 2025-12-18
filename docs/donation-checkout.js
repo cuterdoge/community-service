@@ -51,7 +51,7 @@ function populateDonationSummary() {
         </div>
     `;
 
-    itemsContainer.innerHTML = DOMPurify.sanitize(itemsHTML);
+    itemsContainer.innerHTML = DOMPurify.sanitize(itemsHTML, { ADD_ATTR: ['onclick', 'onchange'] });
 }
 
 // Populate donor information
@@ -63,7 +63,7 @@ function populateDonorInfo() {
         <p><strong>Email:</strong> ${currentUser.email}</p>
         <p><strong>Transaction ID:</strong> ${donationData.transactionId}</p>
         <p><strong>Date:</strong> ${new Date(donationData.date).toLocaleDateString()}</p>
-    `);
+    `, { ADD_ATTR: ['onclick', 'onchange'] });
 }
 
 // Populate impact summary
@@ -80,7 +80,7 @@ function populateImpactSummary() {
             ${impacts}
         </div>
         <p style="margin-top: 20px;"><em>Thank you for making a real difference in our community!</em></p>
-    `);
+    `, { ADD_ATTR: ['onclick', 'onchange'] });
 }
 
 // Setup card number formatting
