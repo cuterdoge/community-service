@@ -45,9 +45,18 @@ function showDashboard() {
 async function loadTimetable() {
     try {
         const dateInput = document.getElementById('volunteerDate');
-        const selectedDate = dateInput ? new Date(dateInput.value) : new Date();
+        const selectedDateStr = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+        const selectedDate = new Date(selectedDateStr);
 
         const grid = document.getElementById('schedule-grid');
+        grid.innerHTML = '<p style="text-align: center; margin: 20px;">Loading schedule...</p>';
+
+        // Fetch current timetable data (slots and unavailable dates)
+        const response = await fetch('/timetable');
+        const data = await response.json();
+        const bookings = data.slots || [];
+        const unavailableDates = data.unavailableDates || [];
+
         grid.innerHTML = '';
 
         const times = ['Morning (9am-12pm)', 'Afternoon (1pm-5pm)', 'Night (6pm-9pm)'];
@@ -62,12 +71,23 @@ async function loadTimetable() {
             month: 'long',
             day: 'numeric'
         });
-        headerDiv.innerHTML = DOMPurify.sanitize(`<h4>Available Time Slots for ${dateStr}</h4>`);
+        headerDiv.innerHTML = DOMPurify.sanitize(`<h4>Available Time Slots for ${dateStr}</h4>`, { ADD_ATTR: ['onclick'] });
         grid.appendChild(headerDiv);
+
+        // Check if date is blocked
+        const isBlocked = unavailableDates.includes(selectedDateStr);
+        if (isBlocked) {
+            const blockedMsg = document.createElement('div');
+            blockedMsg.className = 'alert alert-danger text-center';
+            blockedMsg.style.margin = '20px';
+            blockedMsg.innerHTML = '<strong>Not Available:</strong> This date has been blocked by administrators.';
+            grid.appendChild(blockedMsg);
+            return;
+        }
 
         // Create table for the selected date
         const table = document.createElement('table');
-        table.className = 'schedule-table table-responsive';
+        table.className = 'schedule-table table-responsive w-100';
 
         // Create header row
         const headerRow = document.createElement('tr');
@@ -91,11 +111,23 @@ async function loadTimetable() {
             const actionCell = document.createElement('td');
 
             // Create slot identifier based on date and time
-            const slotId = `${selectedDate.toISOString().split('T')[0]}-${timeKeys[index]}`;
+            const slotId = `${selectedDateStr}-${timeKeys[index]}`;
 
-            // For now, show as available (this would connect to your backend)
-            statusCell.innerHTML = '<span style="color: green;">Available</span>';
-            actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-primary btn-sm" onclick="bookSlot('${slotId}')">Book Slot</button>`);
+            // Check if slot is already booked
+            const booking = bookings.find(b => b.slot === slotId);
+            const isBooked = !!booking && !!booking.booked_by;
+            const isBookedByMe = isBooked && booking.booked_by === currentUser.email;
+
+            if (isBookedByMe) {
+                statusCell.innerHTML = '<span class="badge bg-success">Booked by You</span>';
+                actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-outline-danger btn-sm" onclick="bookSlot('${slotId}')">Cancel Booking</button>`, { ADD_ATTR: ['onclick'] });
+            } else if (isBooked) {
+                statusCell.innerHTML = '<span class="badge bg-secondary">Already Booked</span>';
+                actionCell.innerHTML = '<button class="btn btn-secondary btn-sm" disabled>Locked</button>';
+            } else {
+                statusCell.innerHTML = '<span class="badge bg-light text-dark">Available</span>';
+                actionCell.innerHTML = DOMPurify.sanitize(`<button class="btn btn-primary btn-sm" onclick="bookSlot('${slotId}')">Book Slot</button>`, { ADD_ATTR: ['onclick'] });
+            }
 
             row.appendChild(statusCell);
             row.appendChild(actionCell);
@@ -107,7 +139,7 @@ async function loadTimetable() {
     } catch (err) {
         console.error('Failed to load timetable:', err);
         const grid = document.getElementById('schedule-grid');
-        grid.innerHTML = '<p style="color: red; text-align: center; margin: 20px;">❌ Server not available. Please start the Express server locally.</p>';
+        grid.innerHTML = '<p style="color: red; text-align: center; margin: 20px;">❌ Failed to load schedule. Please verify server connection.</p>';
     }
 }
 
@@ -297,7 +329,7 @@ async function manageUnavailableDates() {
     // Add modal to page
     const modalDiv = document.createElement('div');
     modalDiv.id = 'unavailableModal';
-    modalDiv.innerHTML = DOMPurify.sanitize(modalHtml);
+    modalDiv.innerHTML = DOMPurify.sanitize(modalHtml, { ADD_ATTR: ['onclick'] });
     document.body.appendChild(modalDiv);
 }
 

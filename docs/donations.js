@@ -822,7 +822,7 @@ function displayAdminPackages(packages) {
     }).join('');
 
     console.log('Setting innerHTML with packages HTML');
-    container.innerHTML = DOMPurify.sanitize(packagesHTML);
+    container.innerHTML = DOMPurify.sanitize(packagesHTML, { ADD_ATTR: ['onclick'] });
     console.log('Packages should now be visible');
 }
 
@@ -1063,7 +1063,7 @@ function displayAllDonations(donations) {
         `;
     }).join('');
 
-    container.innerHTML = DOMPurify.sanitize(donationsHTML);
+    container.innerHTML = DOMPurify.sanitize(donationsHTML, { ADD_ATTR: ['onclick'] });
 }
 
 // Delete donation
@@ -1212,7 +1212,7 @@ function displayDonationStats(stats) {
         </div>
     `;
 
-    container.innerHTML = DOMPurify.sanitize(statsHTML);
+    container.innerHTML = DOMPurify.sanitize(statsHTML, { ADD_ATTR: ['onclick'] });
 }
 
 // Filter donations by date

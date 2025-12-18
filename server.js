@@ -83,7 +83,7 @@ function withValidation(rules) {
             if (!errors.isEmpty()) {
                 return res.status(400).json({
                     success: false,
-                    errors: errors.array().map(e => ({ field: e.path, msg: e.msg }))
+                    errors: errors.array().map(e => ({ path: e.path, msg: e.msg }))
                 });
             }
             next();
@@ -516,7 +516,7 @@ app.post('/login', loginLimiter, withValidation([
                 console.error('Session regenerate failed:', err);
                 return res.status(500).json({ success: false, message: 'Session error' });
             }
-            req.session.user = { id: user.id, email: user.email, is_admin: false };
+            req.session.user = { id: user.id, email: user.email, is_admin: !!user.is_admin };
             return res.json({
                 success: true,
                 user: {
@@ -524,7 +524,7 @@ app.post('/login', loginLimiter, withValidation([
                     name: user.name,
                     email: user.email,
                     phone: user.phone,
-                    isAdmin: false
+                    isAdmin: !!user.is_admin
                 }
             });
         });
@@ -543,14 +543,16 @@ app.get('/timetable', async (req, res) => {
     try {
         const [slots] = await db.query('SELECT slot, booked_by FROM slots');
         const [dates] = await db.query('SELECT week_start_date FROM schedule_dates ORDER BY created_at DESC LIMIT 1');
+        const [unavailableRows] = await db.query('SELECT DATE_FORMAT(date, "%Y-%m-%d") as date FROM unavailable_dates');
 
         res.json({
             slots: slots,
-            weekStartDate: dates.length > 0 ? dates[0].week_start_date : null
+            weekStartDate: dates.length > 0 ? dates[0].week_start_date : null,
+            unavailableDates: unavailableRows.map(row => row.date)
         });
     } catch (err) {
-        console.error(err);
-        res.json({ slots: [], weekStartDate: null });
+        console.error('Timetable error:', err);
+        res.json({ slots: [], weekStartDate: null, unavailableDates: [] });
     }
 });
 
@@ -600,15 +602,12 @@ app.post('/updateProfile', withValidation([
         if (!email || !name || !phone || !currentPassword) {
             return res.json({ success: false, message: 'Missing required fields' });
         }
-
         // Get user from database
         const [rows] = await db.query('SELECT * FROM volunteers WHERE email=?', [email]);
         if (rows.length === 0) {
             return res.json({ success: false, message: 'User not found' });
         }
-
         const user = rows[0];
-
         // Verify current password
         const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
         if (!passwordMatch) {
@@ -626,12 +625,9 @@ app.post('/updateProfile', withValidation([
             updateQuery += ', password_hash=?';
             updateParams.push(newPasswordHash);
         }
-
         updateQuery += ' WHERE email=?';
         updateParams.push(email);
-
         await db.query(updateQuery, updateParams);
-
         res.json({ success: true, message: 'Profile updated successfully' });
     } catch (err) {
         console.error('Profile update error:', err);
@@ -1017,8 +1013,19 @@ app.get('/getAllDonations', requireAdmin, async (req, res) => {
                 d.status,
                 d.created_at,
                 d.processed_at,
-                d.payment_method
+                d.payment_method,
+                GROUP_CONCAT(
+                    JSON_OBJECT(
+                        'id', di.package_id,
+                        'name', di.package_name,
+                        'price', di.price,
+                        'quantity', di.quantity,
+                        'subtotal', di.subtotal
+                    ) SEPARATOR '|||'
+                ) as items
             FROM donations d
+            LEFT JOIN donation_items di ON d.id = di.donation_id
+            GROUP BY d.id
             ORDER BY d.created_at DESC
         `);
 
@@ -1036,7 +1043,7 @@ app.get('/getAllDonations', requireAdmin, async (req, res) => {
             return {
                 ...donation,
                 payment_method: parsedPaymentMethod,
-                items: [] // We'll fetch items separately if needed
+                items: donation.items ? donation.items.split('|||').map(item => JSON.parse(item)) : []
             };
         });
 
@@ -1071,7 +1078,7 @@ app.get('/getAllDonationPackages', requireAdmin, async (req, res) => {
 
 // --- Create new donation package (admin) ---
 app.post('/createDonationPackage', requireAdmin, withValidation([
-    body('package_id').matches(/^[a-z0-9-]+$/).withMessage('package_id must be kebab-case'),
+    body('package_id').matches(/^[a-z0-9_-]+$/).withMessage('package_id must be kebab-case or underscore_case'),
     body('name').trim().isLength({ min: 1, max: 100 }),
     body('description').trim().isLength({ min: 1, max: 2000 }),
     body('price').isFloat({ gt: 0 }),
@@ -1110,7 +1117,7 @@ app.post('/createDonationPackage', requireAdmin, withValidation([
 
 // --- Update donation package (admin) ---
 app.put('/updateDonationPackage', requireAdmin, withValidation([
-    body('id').isInt({ gt: 0 }).toInt(),
+    body('id').isInt({ gt: 0 }).withMessage('Internal ID must be a positive integer').toInt(),
     body('name').trim().isLength({ min: 1, max: 100 }),
     body('description').trim().isLength({ min: 1, max: 2000 }),
     body('price').isFloat({ gt: 0 }),
@@ -1148,7 +1155,7 @@ app.put('/updateDonationPackage', requireAdmin, withValidation([
 
 // --- Delete donation package (admin) - TRUE HARD DELETE ---
 app.delete('/deleteDonationPackage/:id', requireAdmin, withValidation([
-    param('id').isInt({ gt: 0 }).toInt()
+    param('id').isInt({ gt: 0 }).withMessage('Internal ID must be a positive integer').toInt()
 ]), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1214,12 +1221,13 @@ app.get('/events', async (req, res) => {
 
 // Create new event (admin only)
 app.post('/events', requireAdmin, withValidation([
-    body('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 }),
-    body('title').trim().isLength({ min: 1, max: 200 }),
-    body('description').trim().isLength({ min: 1, max: 5000 }),
-    body('date').isISO8601(),
-    body('location').trim().isLength({ min: 1, max: 200 }),
-    body('poster').optional().isString()
+    body('id').matches(/^[a-zA-Z0-9_\-]+$/).withMessage('Event ID must only contain letters, numbers, underscores or hyphens')
+        .isLength({ min: 1, max: 50 }).withMessage('Event ID must be 1-50 characters'),
+    body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title must be 1-200 characters'),
+    body('description').trim().isLength({ min: 1, max: 5000 }).withMessage('Description must be 1-5000 characters'),
+    body('date').isISO8601().withMessage('Invalid date format'),
+    body('location').trim().isLength({ min: 1, max: 200 }).withMessage('Location must be 1-200 characters'),
+    body('poster').optional().isString().withMessage('Poster must be a string')
 ]), async (req, res) => {
     try {
         const { id, title, description, date, location, poster } = req.body;
@@ -1253,12 +1261,13 @@ app.post('/events', requireAdmin, withValidation([
 
 // Update event (admin only)
 app.put('/events/:id', requireAdmin, withValidation([
-    param('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 }),
-    body('title').trim().isLength({ min: 1, max: 200 }),
-    body('description').trim().isLength({ min: 1, max: 5000 }),
-    body('date').isISO8601(),
-    body('location').trim().isLength({ min: 1, max: 200 }),
-    body('poster').optional().isString()
+    param('id').matches(/^[a-zA-Z0-9_\-]+$/).withMessage('Event ID must only contain letters, numbers, underscores or hyphens')
+        .isLength({ min: 1, max: 50 }).withMessage('Event ID must be 1-50 characters'),
+    body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title must be 1-200 characters'),
+    body('description').trim().isLength({ min: 1, max: 5000 }).withMessage('Description must be 1-5000 characters'),
+    body('date').isISO8601().withMessage('Invalid date format'),
+    body('location').trim().isLength({ min: 1, max: 200 }).withMessage('Location must be 1-200 characters'),
+    body('poster').optional().isString().withMessage('Poster must be a string')
 ]), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1292,7 +1301,8 @@ app.put('/events/:id', requireAdmin, withValidation([
 
 // Delete event (admin only)
 app.delete('/events/:id', requireAdmin, withValidation([
-    param('id').matches(/^[a-zA-Z0-9-]+$/).isLength({ min: 1, max: 50 })
+    param('id').matches(/^[a-zA-Z0-9_\-]+$/).withMessage('Event ID must only contain letters, numbers, underscores or hyphens')
+        .isLength({ min: 1, max: 50 }).withMessage('Event ID must be 1-50 characters')
 ]), async (req, res) => {
     try {
         const { id } = req.params;
@@ -1316,7 +1326,7 @@ app.delete('/events/:id', requireAdmin, withValidation([
 
 // --- Delete donation record (admin) ---
 app.delete('/deleteDonation/:id', requireAdmin, withValidation([
-    param('id').isInt({ gt: 0 }).toInt()
+    param('id').isInt({ gt: 0 }).withMessage('Internal ID must be a positive integer').toInt()
 ]), async (req, res) => {
     try {
         const { id } = req.params;

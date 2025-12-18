@@ -437,7 +437,7 @@ class EventsManager {
             eventsGrid.style.display = 'grid';
             noEventsMessage.style.display = 'none';
 
-            eventsGrid.innerHTML = DOMPurify.sanitize(filteredEvents.map(event => this.createEventCard(event)).join(''));
+            eventsGrid.innerHTML = DOMPurify.sanitize(filteredEvents.map(event => this.createEventCard(event)).join(''), { ADD_ATTR: ['onclick'] });
         }
     }
 
@@ -537,7 +537,7 @@ class EventsManager {
                     <button onclick="eventsManager.closeEventModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>
-        `);
+        `, { ADD_ATTR: ['onclick'] });
 
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -608,7 +608,11 @@ class EventsManager {
                 // Reload events from database
                 this.loadEventsFromDatabase();
             } else {
-                alert('Failed to publish event: ' + data.message);
+                let errorMsg = 'Failed to publish event: ' + data.message;
+                if (data.errors && Array.isArray(data.errors)) {
+                    errorMsg += '\n\n' + data.errors.map(err => `- ${err.path || err.param || err.field || 'unknown'}: ${err.msg}`).join('\n');
+                }
+                alert(errorMsg);
             }
         } catch (error) {
             console.error('Error saving event to database:', error);
@@ -631,7 +635,11 @@ class EventsManager {
                 // Reload events from database
                 this.loadEventsFromDatabase();
             } else {
-                alert('Failed to update event: ' + data.message);
+                let errorMsg = 'Failed to update event: ' + data.message;
+                if (data.errors && Array.isArray(data.errors)) {
+                    errorMsg += '\n\n' + data.errors.map(err => `- ${err.path || err.param || err.field || 'unknown'}: ${err.msg}`).join('\n');
+                }
+                alert(errorMsg);
             }
         } catch (error) {
             console.error('Error updating event in database:', error);

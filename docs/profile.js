@@ -1,29 +1,29 @@
 // Profile page functionality
 let currentUser = null;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     checkAuthAndLoadProfile();
 });
 
 function checkAuthAndLoadProfile() {
     currentUser = getCurrentUser();
-    
+
     if (!currentUser) {
         document.getElementById('login-required').style.display = 'block';
         document.getElementById('profile-page').style.display = 'none';
         return;
     }
-    
+
     if (currentUser.isAdmin) {
         // Redirect admin to admin page
         alert('Admins use the admin panel for management.');
         window.location.href = 'admin.html';
         return;
     }
-    
+
     document.getElementById('login-required').style.display = 'none';
     document.getElementById('profile-page').style.display = 'block';
-    
+
     loadUserProfile();
     loadMyVolunteerSlots();
     loadMyDonations();
@@ -34,7 +34,7 @@ function loadUserProfile() {
     document.getElementById('profile-name').value = currentUser.name;
     document.getElementById('profile-email').value = currentUser.email;
     document.getElementById('profile-phone').value = currentUser.phone || '';
-    
+
     // Load profile picture with proper placeholder
     const currentPicElement = document.getElementById('current-profile-pic');
     currentPicElement.src = getUserProfilePic(currentUser.id, currentUser.isAdmin);
@@ -71,7 +71,7 @@ function changeProfilePicture() {
     input.type = 'file';
     input.accept = 'image/jpeg,image/jpg,image/png';
     input.style.display = 'none';
-    
+
     input.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file && file.size < 1024 * 1024) { // 1MB limit
@@ -80,12 +80,12 @@ function changeProfilePicture() {
                 const imageData = e.target.result;
                 localStorage.setItem(`profile_pic_${currentUser.id}`, imageData);
                 document.getElementById('current-profile-pic').src = imageData;
-                
+
                 // Update header if headerManager exists
                 if (window.headerManager) {
                     headerManager.updateHeaderDisplay();
                 }
-                
+
                 alert('Profile picture updated!');
             };
             reader.readAsDataURL(file);
@@ -93,7 +93,7 @@ function changeProfilePicture() {
             alert('Please select an image file under 1MB');
         }
     });
-    
+
     document.body.appendChild(input);
     input.click();
     document.body.removeChild(input);
@@ -167,13 +167,13 @@ document.getElementById('profile-form').addEventListener('submit', async (e) => 
         if (data.success) {
             // Update stored user info
             const updatedUser = { ...currentUser, name, phone };
-            
+
             // Determine which storage was being used and update accordingly
             const wasRemembered = localStorage.getItem('currentUser') !== null;
             saveCurrentUser(updatedUser, wasRemembered);
 
             currentUser = updatedUser;
-            
+
             // Update header
             if (window.headerManager) {
                 headerManager.currentUser = updatedUser;
@@ -205,51 +205,51 @@ async function loadMyVolunteerSlots() {
     try {
         const res = await fetch('/myBookings', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email: currentUser.email})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUser.email })
         });
-        
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        
+
         const data = await res.json();
         const slotsContainer = document.getElementById('my-volunteer-slots');
-        
+
         if (!data.bookings || data.bookings.length === 0) {
-            slotsContainer.innerHTML = DOMPurify.sanitize('<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>');
+            slotsContainer.innerHTML = DOMPurify.sanitize('<p>You have no volunteer slots booked yet. <a href="volunteer.html">Book a slot now!</a></p>', { ADD_ATTR: ['onclick'] });
         } else {
             slotsContainer.innerHTML = DOMPurify.sanitize(`
                 <div class="bookings-list">
                     ${data.bookings.map(booking => {
-                        console.log('Booking slot:', booking.slot);
-                        const slotParts = booking.slot.split('-');
-                        const date = slotParts[0] + '-' + slotParts[1] + '-' + slotParts[2]; // YYYY-MM-DD
-                        const time = slotParts[3]; // Morning/Afternoon/Night
-                        
-                        const formattedDate = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                        });
-                        
-                        const timeDisplay = time === 'Morning' ? 'Morning (9am-12pm)' : 
-                                          time === 'Afternoon' ? 'Afternoon (1pm-5pm)' : 
-                                          time === 'Night' ? 'Night (6pm-9pm)' : time;
-                        
-                        return `<div class="booking-item">
+                console.log('Booking slot:', booking.slot);
+                const slotParts = booking.slot.split('-');
+                const date = slotParts[0] + '-' + slotParts[1] + '-' + slotParts[2]; // YYYY-MM-DD
+                const time = slotParts[3]; // Morning/Afternoon/Night
+
+                const formattedDate = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                const timeDisplay = time === 'Morning' ? 'Morning (9am-12pm)' :
+                    time === 'Afternoon' ? 'Afternoon (1pm-5pm)' :
+                        time === 'Night' ? 'Night (6pm-9pm)' : time;
+
+                return `<div class="booking-item">
                             <div class="booking-date"><strong>${formattedDate}</strong></div>
                             <div class="booking-time">${timeDisplay}</div>
                             <div class="booking-actions">
                                 <button onclick="cancelVolunteerSlot('${booking.slot}')" class="cancel-btn-small">Cancel</button>
                             </div>
                         </div>`
-                    }).join('')}
+            }).join('')}
                 </div>
-            `);
+            `, { ADD_ATTR: ['onclick'] });
         }
     } catch (err) {
         console.error('Failed to load volunteer slots:', err);
-        document.getElementById('my-volunteer-slots').innerHTML = DOMPurify.sanitize('<p style="color: red;">Failed to load volunteer slots. Please try again.</p>');
+        document.getElementById('my-volunteer-slots').innerHTML = DOMPurify.sanitize('<p style="color: red;">Failed to load volunteer slots. Please try again.</p>', { ADD_ATTR: ['onclick'] });
     }
 }
 
@@ -258,18 +258,18 @@ async function cancelVolunteerSlot(slotId) {
     if (!confirm('Are you sure you want to cancel this volunteer slot?')) {
         return;
     }
-    
+
     try {
         const res = await fetch('/book', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 email: currentUser.email,
                 name: currentUser.name,
                 slot: slotId
             })
         });
-        
+
         const data = await res.json();
         if (data.success) {
             alert('Volunteer slot cancelled successfully!');
@@ -288,7 +288,7 @@ async function loadMyDonations() {
     try {
         const donationsContainer = document.getElementById('my-donations');
         donationsContainer.innerHTML = DOMPurify.sanitize('<p>Loading your donation history...</p>');
-        
+
         // Get donations from database
         const response = await fetch('/getUserDonations', {
             method: 'POST',
@@ -299,15 +299,15 @@ async function loadMyDonations() {
                 email: currentUser.email
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success) {
             throw new Error(result.message || 'Failed to load donations');
         }
-        
+
         const donationHistory = result.donations || [];
-        
+
         if (donationHistory.length === 0) {
             donationsContainer.innerHTML = DOMPurify.sanitize(`
                 <div class="no-donations">
@@ -315,16 +315,16 @@ async function loadMyDonations() {
                     <p>Start making a difference in our community today!</p>
                     <a href="donations.html" class="donate-now-btn">Make Your First Donation</a>
                 </div>
-            `);
+            `, { ADD_ATTR: ['onclick'] });
             return;
         }
-        
+
         // Calculate donation stats
         const totalAmount = donationHistory.reduce((sum, donation) => sum + parseFloat(donation.total_amount), 0);
         const totalDonations = donationHistory.length;
-        const totalItems = donationHistory.reduce((sum, donation) => 
+        const totalItems = donationHistory.reduce((sum, donation) =>
             sum + donation.items.reduce((itemSum, item) => itemSum + parseInt(item.quantity), 0), 0);
-        
+
         // Render donations with stats
         donationsContainer.innerHTML = DOMPurify.sanitize(`
             <div class="donation-stats">
@@ -348,11 +348,11 @@ async function loadMyDonations() {
             <div class="donations-list">
                 ${donationHistory.map(donation => renderDonationItem(donation)).join('')}
             </div>
-        `);
-        
+        `, { ADD_ATTR: ['onclick'] });
+
     } catch (error) {
         console.error('Error loading donations:', error);
-        document.getElementById('my-donations').innerHTML = 
+        document.getElementById('my-donations').innerHTML =
             DOMPurify.sanitize('<p style="color: red;">Failed to load donation history. Please try again.</p>');
     }
 }
@@ -364,11 +364,11 @@ function renderDonationItem(donation) {
         month: 'long',
         day: 'numeric'
     });
-    
-    const impactSummary = donation.items.length > 1 
+
+    const impactSummary = donation.items.length > 1
         ? `${donation.items.length} different items donated`
         : donation.items[0].impact;
-    
+
     return `
         <div class="donation-item">
             <div class="donation-info">
@@ -399,24 +399,24 @@ async function viewDonationReceipt(transactionId) {
                 email: currentUser.email
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success) {
             alert('Failed to load donation data');
             return;
         }
-        
+
         const donation = result.donations.find(d => d.transaction_id === transactionId);
-        
+
         if (!donation) {
             alert('Receipt not found');
             return;
         }
-        
+
         // Create receipt content
         const receiptContent = generateReceiptHTML(donation);
-        
+
         // Open in new window
         const receiptWindow = window.open('', '_blank', 'width=600,height=800');
         receiptWindow.document.write(`
@@ -445,7 +445,7 @@ async function viewDonationReceipt(transactionId) {
             </html>
         `);
         receiptWindow.document.close();
-        
+
     } catch (error) {
         console.error('Error viewing receipt:', error);
         alert('Error loading receipt. Please try again.');
@@ -455,7 +455,7 @@ async function viewDonationReceipt(transactionId) {
 // Generate receipt HTML
 function generateReceiptHTML(donation) {
     const donationDate = new Date(donation.created_at).toLocaleString();
-    
+
     return `
         <div class="receipt-header">
             <h1>🏠 Joy Home Connect</h1>
